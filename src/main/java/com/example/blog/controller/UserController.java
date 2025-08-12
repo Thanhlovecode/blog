@@ -1,0 +1,29 @@
+package com.example.blog.controller;
+
+import com.example.blog.dto.request.UserRequest;
+import com.example.blog.dto.response.ResponseData;
+import com.example.blog.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("${api.prefix}/users")
+@Slf4j
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserService userService;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseData createUser(@RequestBody @Valid UserRequest userRequest) {
+        userService.createUser(userRequest);
+        return ResponseData.builder()
+                .status(HttpStatus.CREATED.value())
+                .message("User created successfully")
+                .build();
+    }
+}

@@ -20,7 +20,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
@@ -48,3 +48,5 @@ logging:
         dsproxy:
           listener: debug
 
+api:
+ prefix: /api/v1
