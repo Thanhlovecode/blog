@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
-    EMAIL_EXISTED("EMAIL EXISTED", HttpStatus.CONFLICT);
+    EMAIL_EXISTED("EMAIL EXISTED", HttpStatus.CONFLICT),
+    USER_NOT_EXISTED("User not existed",HttpStatus.NOT_FOUND);
+
     private final String message;
     private final HttpStatus httpStatus;
 

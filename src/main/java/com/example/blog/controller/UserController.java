@@ -17,13 +17,28 @@ public class UserController {
 
     private final UserService userService;
 
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData createUser(@RequestBody @Valid UserRequest userRequest) {
         userService.createUser(userRequest);
+        return returnData(HttpStatus.CREATED,"User Created Successfully");
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseData deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return returnData(HttpStatus.OK,"User deleted successfully");
+    }
+
+    private ResponseData returnData(HttpStatus status, String message) {
         return ResponseData.builder()
-                .status(HttpStatus.CREATED.value())
-                .message("User created successfully")
+                .status(status.value())
+                .message(message)
                 .build();
     }
+
+
+
 }

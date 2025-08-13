@@ -4,4 +4,5 @@ import com.example.blog.dto.request.UserRequest;
 
 public interface UserService {
     void createUser(UserRequest request);
+    void deleteUser(Long id);
 }
