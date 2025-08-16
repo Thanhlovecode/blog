@@ -30,7 +30,6 @@ public class UserServiceImpl implements UserService {
     private String content;
 
 
-
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final MailService mailService;
@@ -57,7 +56,7 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info("User created with email: {} ", request.email());
-        mailService.sendSimpleMail(user.getEmail(),subject,content);
+        //mailService.sendSimpleMail(user.getEmail(),subject,content);
     }
 
 

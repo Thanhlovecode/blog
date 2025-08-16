@@ -1,5 +1,6 @@
 server:
   port: 8080
+
 spring:
   application:
     name: blog
@@ -20,7 +21,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
@@ -48,6 +49,12 @@ spring:
           starttls:
             enable: true
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
 
 logging:
   level:
@@ -61,8 +68,10 @@ logging:
         dsproxy:
           listener: debug
 
+
 api:
  prefix: /api/v1
+
 
 email:
   subject: "Welcome to the knowledge sharing system"

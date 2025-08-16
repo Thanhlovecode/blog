@@ -3,9 +3,11 @@ package com.example.blog.domain;
 import com.example.blog.enums.Gender;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "profiles")
@@ -36,5 +38,9 @@ public class Profile{
     @MapsId
     @JoinColumn(name = "id")
     private User user;
+
+    @Column(name = "updated_at",nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }
