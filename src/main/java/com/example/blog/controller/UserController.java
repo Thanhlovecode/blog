@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,24 +21,18 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData createUser(@RequestBody @Valid UserRequest userRequest) {
+    public ResponseData<Void> createUser(@RequestBody @Valid UserRequest userRequest) {
         userService.createUser(userRequest);
-        return returnData(HttpStatus.CREATED,"User Created Successfully");
+        return ResponseData.successWithMessage("User Created Successfully", HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseData deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ResponseData<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return returnData(HttpStatus.OK,"User deleted successfully");
+        return ResponseEntity.ok(
+                ResponseData.successWithMessage("User Deleted Successfully", HttpStatus.OK));
     }
 
-    private ResponseData returnData(HttpStatus status, String message) {
-        return ResponseData.builder()
-                .status(status.value())
-                .message(message)
-                .build();
-    }
 
 
 

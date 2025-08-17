@@ -9,6 +9,7 @@ import com.example.blog.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,49 +21,39 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @PutMapping("/contact/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseData<?> updateContactInfo(@PathVariable Long id,
-                                          @RequestBody ContactInfoRequest contactRequest) {
+    public ResponseEntity<ResponseData<Void>> updateContactInfo(@PathVariable Long id,
+                                               @RequestBody ContactInfoRequest contactRequest) {
         profileService.updateContactInfo(id,contactRequest);
-        return returnData("Contact information updated successfully");
+        return ResponseEntity.ok(ResponseData.successWithMessage
+                ("update contact information successfully", HttpStatus.OK)
+        );
     }
 
     @PutMapping("/personal/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseData<?> updatePersonalInfo(@PathVariable Long id,
+
+    public ResponseEntity<ResponseData<Void>>  updatePersonalInfo(@PathVariable Long id,
                                            @RequestBody PersonalInfoRequest personalRequest) {
         profileService.updatePersonalInfo(id,personalRequest);
-        return returnData("Personal information updated successfully");
+        return ResponseEntity.ok(ResponseData.successWithMessage
+                ("update personal information successfully", HttpStatus.OK)
+        );
     }
-
-    private ResponseData<?> returnData(String message) {
-        return ResponseData.builder()
-                .status(HttpStatus.OK.value())
-                .message(message)
-                .build();
-    }
-
 
     @GetMapping("/personal/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseData<PersonalInfoResponse> getPersonalInfo(@PathVariable Long id) {
+    public ResponseEntity<ResponseData<PersonalInfoResponse>> getPersonalInfo(@PathVariable Long id) {
         PersonalInfoResponse infoResponse = profileService.getPersonalInfo(id);
-        return ResponseData.<PersonalInfoResponse>builder()
-                .status(HttpStatus.OK.value())
-                .message("Get personal information successfully")
-                .data(infoResponse)
-                .build();
+
+        return ResponseEntity.ok(ResponseData.successWithData(
+                "Get personal info successfully",infoResponse
+        ));
     }
 
     @GetMapping("/contact/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseData<ContactInfoResponse> getContactInfo(@PathVariable Long id) {
+    public  ResponseEntity<ResponseData<ContactInfoResponse>> getContactInfo(@PathVariable Long id) {
         ContactInfoResponse contactResponse = profileService.getContactInfo(id);
-        return ResponseData.<ContactInfoResponse>builder()
-                .status(HttpStatus.OK.value())
-                .message("Get contact information successfully")
-                .data(contactResponse)
-                .build();
+        return ResponseEntity.ok(ResponseData.successWithData(
+                "Get contact info successfully",contactResponse
+        ));
     }
 
 }
