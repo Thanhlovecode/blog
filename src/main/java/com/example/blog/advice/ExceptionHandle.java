@@ -15,7 +15,7 @@ import java.util.Objects;
 @ControllerAdvice
 public class ExceptionHandle {
 
-    private static final String ERROR = "ERROR!!!";
+    private static final String ERROR = "ERROR!";
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ErrorResponse> handleAppException(AppException exception

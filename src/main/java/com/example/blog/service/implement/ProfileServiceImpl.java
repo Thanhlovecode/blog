@@ -11,11 +11,14 @@ import com.example.blog.exception.AppException;
 import com.example.blog.mapper.ProfileMapper;
 import com.example.blog.repository.ProfileRepository;
 import com.example.blog.repository.UserRepository;
+import com.example.blog.service.CloudinaryService;
 import com.example.blog.service.ProfileService;
+import com.example.blog.utils.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -40,6 +44,21 @@ public class ProfileServiceImpl implements ProfileService {
 
 
         return profileRepository.getPersonalInfo(id);
+    }
+
+    @Override
+    @Transactional
+    public String uploadImage(MultipartFile file, String folder, Long id) {
+        FileUploadUtil.assertAllowed(file);
+
+        String imageUrl = cloudinaryService.upload(file, folder);
+
+        Profile profile = getProfileById(id);
+        profile.setAvatar(imageUrl);
+        profileRepository.save(profile);
+
+        log.info("Avatar user with id {} has been uploaded", id);
+        return imageUrl;
     }
 
     @Override

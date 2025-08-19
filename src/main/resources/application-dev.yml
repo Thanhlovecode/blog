@@ -60,6 +60,13 @@ spring:
       host: 127.0.0.1
 
 
+
+cloudinary:
+  cloud-name: dum6ikijf
+  api-key: 912391234678171
+  api-secret: MzQcClMsCUsfgw0dsVdO4UfBWv4
+
+
 logging:
   level:
     org:

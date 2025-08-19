@@ -1,0 +1,1 @@
+ALTER TABLE users DROP INDEX idx_user_email;
