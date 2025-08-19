@@ -62,9 +62,9 @@ spring:
 
 
 cloudinary:
-  cloud-name: dum6ikijf
-  api-key: 912391234678171
-  api-secret: MzQcClMsCUsfgw0dsVdO4UfBWv4
+  cloud-name: ${CLOUD_NAME}
+  api-key: ${API_KEY}
+  api-secret: ${API_SECRET}
 
 
 logging:
