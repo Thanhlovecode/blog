@@ -1,0 +1,1 @@
+alter table profiles add imageId varchar(100) unique ;

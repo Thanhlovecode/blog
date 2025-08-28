@@ -24,12 +24,13 @@ public class Profile{
     private String firstName;
     private String lastName;
 
-    private String avatar;
+    private String imageUrl;
+    private String thumbnailUrl;
+    private String imageId;
     private String address;
 
     private LocalDate birthday;
     private String phone;
-
 
     @Enumerated(EnumType.STRING)
     private Gender gender;

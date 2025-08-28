@@ -1,0 +1,1 @@
+alter table profiles rename column avatar to imageUrl;

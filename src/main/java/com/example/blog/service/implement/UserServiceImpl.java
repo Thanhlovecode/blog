@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void createUser(UserRequest request) {
         User user = userMapper.toUser(request);
+
         try{
             userRepository.save(user);
         } catch (DataIntegrityViolationException ex){

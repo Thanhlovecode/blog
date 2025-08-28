@@ -18,7 +18,11 @@ public enum ErrorCode {
 
     FILE_IS_EMPTY("File is empty", HttpStatus.BAD_REQUEST),
     FILE_SIZE_TOO_LARGE("File is too large", HttpStatus.UNPROCESSABLE_ENTITY),
-    FILE_EXTENSION_NOT_SUPPORTED("File extension not supported", HttpStatus.UNPROCESSABLE_ENTITY);
+    FILE_EXTENSION_NOT_SUPPORTED("File extension not supported", HttpStatus.UNPROCESSABLE_ENTITY),
+
+
+    TAG_NOT_FOUND("Tag does not exist", HttpStatus.NOT_FOUND),
+    TAG_ALREADY_EXISTS("Tag already exists", HttpStatus.CONFLICT);
 
 
     private final String message;

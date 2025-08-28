@@ -46,7 +46,7 @@ public class ExceptionHandle {
                         .code(status.value())
                         .timestamp(ZonedDateTime.now())
                         .path(servletRequest.getRequestURI())
-                        .error(ERROR)
+                        .error(status.getReasonPhrase())
                         .message(message)
                         .build());
     }

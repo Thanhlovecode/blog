@@ -4,6 +4,7 @@ import com.example.blog.domain.Profile;
 import com.example.blog.domain.User;
 import com.example.blog.dto.request.ContactInfoRequest;
 import com.example.blog.dto.request.PersonalInfoRequest;
+import com.example.blog.dto.response.CloudinaryResponse;
 import com.example.blog.dto.response.ContactInfoResponse;
 import com.example.blog.dto.response.PersonalInfoResponse;
 import com.example.blog.enums.ErrorCode;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -41,24 +43,29 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public PersonalInfoResponse getPersonalInfo(Long id) {
-
-
         return profileRepository.getPersonalInfo(id);
     }
 
+
     @Override
     @Transactional
-    public String uploadImage(MultipartFile file, String folder, Long id) {
+    public String uploadImage(MultipartFile file, Long id) {
         FileUploadUtil.assertAllowed(file);
 
-        String imageUrl = cloudinaryService.upload(file, folder);
 
         Profile profile = getProfileById(id);
-        profile.setAvatar(imageUrl);
+
+        if (StringUtils.hasLength(profile.getImageId())) {
+            cloudinaryService.deleteImage(profile.getImageId());
+        }
+
+        CloudinaryResponse cloudinaryResponse = cloudinaryService.upload(file);
+
+        profileMapper.mapImagedInfoProfile(profile, cloudinaryResponse);
         profileRepository.save(profile);
 
         log.info("Avatar user with id {} has been uploaded", id);
-        return imageUrl;
+        return cloudinaryResponse.imageUrl();
     }
 
     @Override
@@ -77,7 +84,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     private Profile getProfileById(Long id) {
         return profileRepository.findById(id)
-                .orElseGet(()-> Profile.builder()
+                .orElseGet(() -> Profile.builder()
                         .user(getUserById(id))
                         .build()
                 );
@@ -85,7 +92,7 @@ public class ProfileServiceImpl implements ProfileService {
 
 
     private User getUserById(Long id) {
-        if(!userRepository.existsById(id)) {
+        if (!userRepository.existsById(id)) {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
         return userRepository.getReferenceById(id);

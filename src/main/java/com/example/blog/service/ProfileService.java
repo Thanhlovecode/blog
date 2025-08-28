@@ -11,5 +11,6 @@ public interface ProfileService {
     void updatePersonalInfo(Long id,PersonalInfoRequest infoRequest);
     PersonalInfoResponse getPersonalInfo(Long id);
     ContactInfoResponse getContactInfo(Long id);
-    String uploadImage(MultipartFile file, String folder, Long id);
+    String uploadImage(MultipartFile file, Long id);
+
 }

@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -60,12 +62,15 @@ public class ProfileController {
     @PatchMapping("/upload/image/{id}")
     public ResponseEntity<ResponseData<String>>  uploadImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "folder",required = false,defaultValue = "images") String folder,
             @PathVariable Long id) {
 
-        String url = profileService.uploadImage(file,folder,id);
+        String url = profileService.uploadImage(file,id);
         return ResponseEntity.ok(ResponseData.successWithData(
                 "Upload image successfully",url
         ));
     }
+
+
+
+
 }

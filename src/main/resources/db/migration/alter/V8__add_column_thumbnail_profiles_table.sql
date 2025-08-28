@@ -1,0 +1,1 @@
+alter table profiles add thumbnail_url varchar(255);
