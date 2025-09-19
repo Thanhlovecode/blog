@@ -1,6 +1,7 @@
-package com.example.blog.validator;
+package com.example.blog.annotation;
 
 
+import com.example.blog.validator.PasswordConstraintValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

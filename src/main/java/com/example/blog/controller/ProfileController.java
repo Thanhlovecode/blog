@@ -64,7 +64,7 @@ public class ProfileController {
             @RequestParam("file") MultipartFile file,
             @PathVariable Long id) {
 
-        String url = profileService.uploadImage(file,id);
+        String url = profileService.uploadImageUser(file,id);
         return ResponseEntity.ok(ResponseData.successWithData(
                 "Upload image successfully",url
         ));

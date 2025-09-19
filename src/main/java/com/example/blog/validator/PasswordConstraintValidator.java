@@ -1,5 +1,6 @@
 package com.example.blog.validator;
 
+import com.example.blog.annotation.ValidPassword;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.passay.*;

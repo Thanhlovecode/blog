@@ -8,6 +8,8 @@ import com.example.blog.dto.response.CloudinaryResponse;
 import com.example.blog.dto.response.ContactInfoResponse;
 import com.example.blog.dto.response.PersonalInfoResponse;
 import com.example.blog.enums.ErrorCode;
+import com.example.blog.event.ImageCleanUpEvent;
+import com.example.blog.event.ProfileImageUpdateEvent;
 import com.example.blog.exception.AppException;
 import com.example.blog.mapper.ProfileMapper;
 import com.example.blog.repository.ProfileRepository;
@@ -17,6 +19,7 @@ import com.example.blog.service.ProfileService;
 import com.example.blog.utils.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,6 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
     private final CloudinaryService cloudinaryService;
+    private final ApplicationEventPublisher publisher;
 
     @Override
     @Transactional
@@ -49,23 +53,24 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public String uploadImage(MultipartFile file, Long id) {
+    public String uploadImageUser(MultipartFile file, Long id) {
         FileUploadUtil.assertAllowed(file);
-
 
         Profile profile = getProfileById(id);
 
         if (StringUtils.hasLength(profile.getImageId())) {
-            cloudinaryService.deleteImage(profile.getImageId());
+            publisher.publishEvent(new ImageCleanUpEvent(this, profile.getImageId()));
         }
 
-        CloudinaryResponse cloudinaryResponse = cloudinaryService.upload(file);
+        CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadImage(file);
 
         profileMapper.mapImagedInfoProfile(profile, cloudinaryResponse);
         profileRepository.save(profile);
 
+
         log.info("Avatar user with id {} has been uploaded", id);
-        return cloudinaryResponse.imageUrl();
+        publisher.publishEvent(new ProfileImageUpdateEvent(this,cloudinaryResponse.thumbnailUrl(),1L));
+        return cloudinaryResponse.thumbnailUrl();
     }
 
     @Override

@@ -1,22 +1,26 @@
 package com.example.blog.service.implement;
 
+import com.example.blog.domain.Post;
 import com.example.blog.domain.Tag;
 import com.example.blog.dto.request.TagUpdateRequest;
-import com.example.blog.dto.response.CloudinaryResponse;
 import com.example.blog.dto.response.PageResponse;
+import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.TagResponse;
 import com.example.blog.enums.ErrorCode;
+import com.example.blog.enums.PostStatus;
 import com.example.blog.exception.AppException;
+import com.example.blog.mapper.PostMapper;
 import com.example.blog.mapper.TagMapper;
 import com.example.blog.repository.TagRepository;
 import com.example.blog.service.CloudinaryService;
 import com.example.blog.service.TagService;
 import com.example.blog.utils.FileUploadUtil;
+import com.example.blog.utils.PageUtil;
 import com.example.blog.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,27 +37,42 @@ import java.util.List;
 public class TagServiceImpl implements TagService {
 
 
+
     private final TagRepository tagRepository;
     private final CloudinaryService cloudinaryService;
     private final TagMapper tagMapper;
+    private final PostMapper postMapper;
 
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "tags",allEntries = true)
     public void updateTag(String slug,TagUpdateRequest tagUpdateRequest) {
+
+        String newSlug = SlugUtil.toSlug(tagUpdateRequest.name());
+
+        if(tagRepository.existsBySlug(newSlug)) {
+            throw new AppException(ErrorCode.TAG_ALREADY_EXISTS);
+        }
+
         Tag tag = tagRepository.findBySlug(slug)
                 .orElseThrow(()-> new AppException(ErrorCode.TAG_NOT_FOUND));
 
         tag.setName(tagUpdateRequest.name());
-        tag.setSlug(SlugUtil.toSlug(tagUpdateRequest.name()));
+        tag.setSlug(newSlug);
         tagRepository.save(tag);
+
     }
 
 
+
+
     @Override
-    @Cacheable(cacheNames = "tags",key = "'page_'+#page")
+    @Cacheable(cacheNames = "tags",key = "'page_'+#page",
+            condition = "#page<=10")
+//    @JsonCache(cacheName = "tags",timeToLive = 1800)
     public PageResponse<List<TagResponse>> getAllTags(int page) {
-        Page<Tag> tags = tagRepository.findAll(createPageable(page));
+        Page<Tag> tags = tagRepository.findAll(PageUtil.createPageable(page));
         List<TagResponse> tagResponses = tags.getContent().stream()
                 .map(tagMapper::toTagResponse)
                 .toList();
@@ -62,27 +81,20 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
-    public String addTag(String tagName, MultipartFile multipartFile) {
+    @CacheEvict(cacheNames = "tags",allEntries = true)
+    public TagResponse addTag(String tagName, MultipartFile multipartFile) {
         FileUploadUtil.assertAllowed(multipartFile);
 
-        CloudinaryResponse cloudinaryResponse = cloudinaryService
-                .upload(multipartFile);
-
+        String thumbnailUrl = cloudinaryService.uploadThumbnail(multipartFile);
         Tag tag = Tag.builder()
                 .name(tagName)
                 .slug(SlugUtil.toSlug(tagName))
-                .thumbnailUrl(cloudinaryResponse.thumbnailUrl())
+                .thumbnailUrl(thumbnailUrl)
                 .build();
-        try{
-            tagRepository.save(tag);
-        } catch (DataIntegrityViolationException ex){
-            throw new AppException(ErrorCode.TAG_ALREADY_EXISTS);
-        }
-        return cloudinaryResponse.thumbnailUrl();
+
+        tagRepository.save(tag);
+        return tagMapper.toTagResponse(tag);
     }
 
 
-    private Pageable createPageable(int page) {
-        return PageRequest.of(page-1, 20);
-    }
 }

@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setStatus(UserStatus.INACTIVE);
         userRepository.save(user);
         log.info("disable user with email: {}", user.getEmail());
@@ -50,15 +50,9 @@ public class UserServiceImpl implements UserService {
     public void createUser(UserRequest request) {
         User user = userMapper.toUser(request);
 
-        try{
-            userRepository.save(user);
-        } catch (DataIntegrityViolationException ex){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
-
+        userRepository.save(user);
         log.info("User created with email: {} ", request.email());
-        //mailService.sendSimpleMail(user.getEmail(),subject,content);
+        mailService.sendSimpleMail(user.getEmail(),subject,content);
     }
-
 
 }

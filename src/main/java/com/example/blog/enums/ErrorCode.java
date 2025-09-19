@@ -22,7 +22,9 @@ public enum ErrorCode {
 
 
     TAG_NOT_FOUND("Tag does not exist", HttpStatus.NOT_FOUND),
-    TAG_ALREADY_EXISTS("Tag already exists", HttpStatus.CONFLICT);
+    TAG_ALREADY_EXISTS("Tag already exists", HttpStatus.CONFLICT),
+
+    POST_NOT_FOUND("Post not found", HttpStatus.NOT_FOUND);
 
 
     private final String message;

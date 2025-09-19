@@ -1,5 +1,7 @@
 package com.example.blog.config;
 
+import com.example.blog.dto.response.PageResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,12 +56,12 @@ public class RedisConfig {
 
 
     @Bean
-    public RedisCacheManager redisCacheManager(RedisConnectionFactory connection) {
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory connection, ObjectMapper objectMapper) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.
                         fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.
-                        fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
+                        fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, PageResponse.class)))
                 .entryTtl(Duration.ofHours(1))
                 .disableCachingNullValues();
         return RedisCacheManager.builder(connection)

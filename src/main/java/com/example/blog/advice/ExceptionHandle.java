@@ -3,6 +3,7 @@ package com.example.blog.advice;
 import com.example.blog.dto.response.ErrorResponse;
 import com.example.blog.exception.AppException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,7 +16,6 @@ import java.util.Objects;
 @ControllerAdvice
 public class ExceptionHandle {
 
-    private static final String ERROR = "ERROR!";
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ErrorResponse> handleAppException(AppException exception
@@ -23,18 +23,20 @@ public class ExceptionHandle {
         return handleErrorResponse(exception.getMessage(), request, exception.getStatus());
     }
 
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleAppException(DataIntegrityViolationException exception
+            , HttpServletRequest request) {
+        return handleErrorResponse(exception.getMessage(), request, HttpStatus.CONFLICT);
+    }
+
+
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception
             , HttpServletRequest servletRequest) {
 
         String message = Objects.requireNonNull(exception.getFieldError()).getDefaultMessage();
-
-//        var attributes = exception.getBindingResult().getAllErrors()
-//                .stream()
-//                .findFirst()
-//                .map(objectError -> objectError.unwrap(ConstraintViolation.class))
-//                .map(violation -> violation.getConstraintDescriptor().getAttributes())
-//                .orElse(null);
 
         return handleErrorResponse(message, servletRequest, HttpStatus.UNPROCESSABLE_ENTITY);
     }
