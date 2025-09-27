@@ -1,0 +1,2 @@
+ALTER TABLE posts
+ADD COLUMN display_name VARCHAR(100) NOT NULL;

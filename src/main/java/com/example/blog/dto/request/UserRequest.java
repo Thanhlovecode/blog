@@ -3,9 +3,12 @@ package com.example.blog.dto.request;
 
 import com.example.blog.annotation.ValidPassword;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record UserRequest(
         @NotNull @Email String email,
-        @NotNull @ValidPassword String password) {
+        @NotNull @ValidPassword String password,
+        @NotBlank String username,
+        @NotBlank String fullName) {
 }

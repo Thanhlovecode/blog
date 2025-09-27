@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,6 +40,13 @@ public class ExceptionHandle {
         String message = Objects.requireNonNull(exception.getFieldError()).getDefaultMessage();
 
         return handleErrorResponse(message, servletRequest, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAppException(AccessDeniedException exception
+            , HttpServletRequest request) {
+        return handleErrorResponse(exception.getMessage(), request, HttpStatus.FORBIDDEN);
     }
 
     private ResponseEntity<ErrorResponse> handleErrorResponse(String message, HttpServletRequest servletRequest

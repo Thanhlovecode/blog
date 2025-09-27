@@ -18,7 +18,7 @@ public class RedisServiceImpl implements RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public void setString(String key, String value,int expire) {
+    public void setString(String key, String value,long expire) {
         if(!StringUtils.hasLength(key)){
             return;
         }

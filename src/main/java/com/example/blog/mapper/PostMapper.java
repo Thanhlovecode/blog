@@ -18,6 +18,7 @@ public class PostMapper {
                 post.getSlug(),
                 post.getUsername(),
                 post.getThumbnailUrl(),
+                post.getDisplayName(),
                 post.getReadingTime(),
                 post.getTotalViews(),
                 post.getTotalComments(),
@@ -34,6 +35,7 @@ public class PostMapper {
                 .slug(post.getSlug())
                 .excerpt(post.getExcerpt())
                 .username(post.getUsername())
+                .displayName(post.getDisplayName())
                 .readingTime(post.getReadingTime())
                 .thumbnailUrl(post.getThumbnailUrl())
                 .totalComments(post.getTotalComments())

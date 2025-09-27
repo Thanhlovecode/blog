@@ -24,8 +24,8 @@ public class TagController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<TagResponse> createTag(@RequestParam String name,
-                                          @RequestParam("file") MultipartFile file) {
-        TagResponse tagResponse = tagService.addTag(name,file);
+                                               @RequestParam("file") MultipartFile file) {
+        TagResponse tagResponse = tagService.addTag(name, file);
         return ResponseData.<TagResponse>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Tag created successfully")
@@ -42,10 +42,9 @@ public class TagController {
     }
 
 
-
     @PutMapping("/{slug}")
     public ResponseData<Void> updateTag(@PathVariable String slug,
-            @RequestBody @Valid TagUpdateRequest request) {
+                                        @RequestBody @Valid TagUpdateRequest request) {
         tagService.updateTag(slug, request);
         return ResponseData.successWithMessage(
                 "Tag Updated Successfully", HttpStatus.OK

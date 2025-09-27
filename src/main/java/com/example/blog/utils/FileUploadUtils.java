@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.regex.Pattern;
 
 @UtilityClass
-public class FileUploadUtil {
+public class FileUploadUtils {
 
     public static final int MAX_FILE_SIZE = 2 * 1024 * 1024;
 

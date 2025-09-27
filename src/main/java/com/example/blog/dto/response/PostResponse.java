@@ -16,6 +16,7 @@ public class PostResponse {
     private String slug;
     private String excerpt;
     private String username;
+    private String displayName;
     private int readingTime;
     private String thumbnailUrl;
     private int totalComments;

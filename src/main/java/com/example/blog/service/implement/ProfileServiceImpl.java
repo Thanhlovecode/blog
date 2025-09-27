@@ -16,7 +16,7 @@ import com.example.blog.repository.ProfileRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.CloudinaryService;
 import com.example.blog.service.ProfileService;
-import com.example.blog.utils.FileUploadUtil;
+import com.example.blog.utils.FileUploadUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,10 +53,10 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public String uploadImageUser(MultipartFile file, Long id) {
-        FileUploadUtil.assertAllowed(file);
+    public String uploadImageUser(MultipartFile file, Long userId) {
+        FileUploadUtils.assertAllowed(file);
 
-        Profile profile = getProfileById(id);
+        Profile profile = getProfileById(userId);
 
         if (StringUtils.hasLength(profile.getImageId())) {
             publisher.publishEvent(new ImageCleanUpEvent(this, profile.getImageId()));
@@ -68,8 +68,8 @@ public class ProfileServiceImpl implements ProfileService {
         profileRepository.save(profile);
 
 
-        log.info("Avatar user with id {} has been uploaded", id);
-        publisher.publishEvent(new ProfileImageUpdateEvent(this,cloudinaryResponse.thumbnailUrl(),1L));
+        log.info("Avatar user with userId {} has been uploaded", userId);
+        publisher.publishEvent(new ProfileImageUpdateEvent(this,cloudinaryResponse.thumbnailUrl(),userId));
         return cloudinaryResponse.thumbnailUrl();
     }
 
@@ -85,6 +85,8 @@ public class ProfileServiceImpl implements ProfileService {
         profileMapper.mapPersonalInfo(infoRequest, profile);
         profileRepository.save(profile);
     }
+
+
 
 
     private Profile getProfileById(Long id) {

@@ -30,6 +30,9 @@ public class Post extends BaseEntity {
     @Column(length = 100)
     private String username;
 
+    @Column(length = 100,nullable = false)
+    private String displayName;
+
     private int readingTime;
 
     @Column(length = 300)

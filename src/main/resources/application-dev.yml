@@ -93,3 +93,14 @@ key:
     otp: 60
   change-password:
     expire: 600
+
+# security
+security:
+  jwt:
+    private-key: classpath:certs/private.pem
+    public-key: classpath:certs/public.pem
+
+token:
+  access-duration: 3600       # 1 giờ
+  refresh-duration: 604800    # 7 ngày
+

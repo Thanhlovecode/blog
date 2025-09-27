@@ -72,4 +72,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             where p.id IN :ids
             """)
     Page<Post> findPostWithTagsByIds(List<Long> ids, Pageable pageable);
+
+
+    boolean existsBySlugAndUsername(String slug, String username);
 }

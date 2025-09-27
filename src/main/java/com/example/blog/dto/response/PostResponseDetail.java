@@ -6,6 +6,7 @@ public record PostResponseDetail(
         String title,
         String slug,
         String username,
+        String displayName,
         String thumbnailUrl,
         int readingTime,
         int totalViews,

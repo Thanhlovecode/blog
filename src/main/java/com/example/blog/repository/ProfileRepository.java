@@ -3,10 +3,13 @@ package com.example.blog.repository;
 import com.example.blog.domain.Profile;
 import com.example.blog.dto.response.ContactInfoResponse;
 import com.example.blog.dto.response.PersonalInfoResponse;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
@@ -25,6 +28,9 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
            where p.id = :id
            """)
     ContactInfoResponse getContactInfo(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"user"})
+    Optional<Profile> findByUserId(Long id);
 
 
 

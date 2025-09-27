@@ -32,8 +32,4 @@ public class UserController {
         return ResponseEntity.ok(
                 ResponseData.successWithMessage("User Deleted Successfully", HttpStatus.OK));
     }
-
-
-
-
 }

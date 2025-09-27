@@ -19,13 +19,13 @@ import com.example.blog.repository.ProfileRepository;
 import com.example.blog.repository.TagRepository;
 import com.example.blog.service.PostService;
 import com.example.blog.service.RedisService;
-import com.example.blog.utils.PageUtil;
+import com.example.blog.utils.PageUtils;
 import com.example.blog.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +37,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
+@Slf4j(topic = "POST-SERVICE")
 public class PostServiceImpl implements PostService {
 
     private static final int WORDS_PER_MINUTE = 200;
@@ -59,7 +59,7 @@ public class PostServiceImpl implements PostService {
     public PageResponse<List<PostResponse>> getPublishedPostsByUserId(Long userId, int page) {
 
         log.info("Request to get published posts for user ID: {}", userId);
-        Pageable pageable = PageUtil.createPageable(page);
+        Pageable pageable = PageUtils.createPageable(page);
 
         Page<Post> posts = postRepository.findPostsWithTagsByUserIdAndStatus(userId, PostStatus.PUBLISHED, pageable);
 
@@ -86,7 +86,7 @@ public class PostServiceImpl implements PostService {
     }
 
     private PageResponse<List<PostResponse>> getPostsPageResponse(List<Long> postIds, int page, String sortBy) {
-        Pageable pageable = PageUtil.createSortPageable(page, sortBy);
+        Pageable pageable = PageUtils.createSortPageable(page, sortBy);
         Page<Post> posts = postRepository.findPostWithTagsByIds(postIds, pageable);
         List<PostResponse> postResponses = convertToListPostResponse(posts.getContent());
         return PageResponse.fromPage(posts, postResponses);
@@ -108,6 +108,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    @PreAuthorize("@postSecurity.isPostOwner(#slug)")
     public void updatePost(String slug, PostUpdateRequest updateRequest) {
         Post post = findPostBySlugOrThrow(slug);
         updatePostFields(post, updateRequest);
@@ -118,6 +119,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    @PreAuthorize("@postSecurity.isPostOwner(#slug)")
     public void updateStatusPost(String slug, PostStatusUpdateRequest statusUpdateRequest) {
         Post post = postRepository.findPostWithoutContentBySlug(slug)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -145,7 +147,8 @@ public class PostServiceImpl implements PostService {
         if (!redisService.setStringIfAbsent(cacheKeyPost, "1", POST_CREATE_KEY_EXPIRED)) {
             return;
         }
-        Profile profile = profileRepository.findById(postRequest.userId()).
+
+        Profile profile = profileRepository.findByUserId(postRequest.userId()).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Post post = buildPost(postRequest, profile);
@@ -180,7 +183,8 @@ public class PostServiceImpl implements PostService {
                 .postContent(postContent)
                 .user(profile.getUser())
                 .status(postRequest.status())
-                .username(profile.getFirstName() + " " + profile.getLastName())
+                .username(profile.getUser().getUsername())
+                .displayName(profile.getUser().getFullName())
                 .thumbnailUrl(profile.getThumbnailUrl())
                 .tags(findAllTagsById(postRequest.idTags()))
                 .readingTime(calculateReadingTime(postRequest.content()))
