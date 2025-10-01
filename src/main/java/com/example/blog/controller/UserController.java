@@ -18,7 +18,6 @@ public class UserController {
 
     private final UserService userService;
 
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseData<Void> createUser(@RequestBody @Valid UserRequest userRequest) {

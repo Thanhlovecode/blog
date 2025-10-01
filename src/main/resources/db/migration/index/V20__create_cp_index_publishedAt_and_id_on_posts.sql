@@ -1,0 +1,1 @@
+CREATE INDEX idx_posts_published_id ON posts(published_at DESC, id DESC);

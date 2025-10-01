@@ -1,16 +1,18 @@
 package com.example.blog.controller;
 
 import com.example.blog.dto.request.PostRequest;
-import com.example.blog.dto.response.*;
 import com.example.blog.dto.request.PostStatusUpdateRequest;
 import com.example.blog.dto.request.PostUpdateRequest;
+import com.example.blog.dto.response.PageResponse;
+import com.example.blog.dto.response.PostResponse;
+import com.example.blog.dto.response.PostResponseDetail;
+import com.example.blog.dto.response.ResponseData;
 import com.example.blog.service.PostService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,15 +44,15 @@ public class PostController {
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByKeySearch(keyword, page, sortBy));
+                postService.getPublishedPostsByKeySearch(keyword, page, sortBy),HttpStatus.OK);
     }
 
 
-    @GetMapping("/user/{userId}")
-    public ResponseData<PageResponse<List<PostResponse>>> getPostsByUserId(@PathVariable Long userId,
-                                                                           @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
+    @GetMapping("/user/{username}")
+    public ResponseData<PageResponse<List<PostResponse>>> getPostsByUsername(@PathVariable String username,
+                                                                             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByUserId(userId, page));
+                postService.getPublishedPostsByUsername(username, page),HttpStatus.OK );
     }
 
     @GetMapping("/tags/{slug}")
@@ -58,15 +60,22 @@ public class PostController {
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByTagSlug(slug, page, sortBy));
+                postService.getPublishedPostsByTagSlug(slug, page, sortBy),HttpStatus.OK);
+    }
+
+    @GetMapping("/newest")
+    public ResponseData<PageResponse<List<PostResponse>>> getNewestPosts(
+            @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
+        return ResponseData.successWithData(RETURN_MESSAGE_POST,
+                postService.getNewestPublishedPost(page),HttpStatus.OK);
     }
 
     @GetMapping("/{slug}")
-    public ResponseData<PostResponseDetail> getPostBySlug(
+    public ResponseData<PostResponseDetail> getPostDetailBySlug(
             @PathVariable String slug) {
-        PostResponseDetail postResponseDetail = postService.getPostBySlug(slug);
+        PostResponseDetail postResponseDetail = postService.getPostDetailBySlug(slug);
         return ResponseData.successWithData(
-                "Get Post by Slug Successfully", postResponseDetail
+                "Get Post by Slug Successfully", postResponseDetail,HttpStatus.OK
         );
     }
 
@@ -85,14 +94,16 @@ public class PostController {
         return ResponseData.successWithMessage("Post Updated Successfully",
                 HttpStatus.OK);
     }
-
-    @GetMapping("/hello")
-    public String hello(Authentication authentication){
+//
+//    @GetMapping("/hello")
+//    public String hello(CustomAuthenticationToken authentication){
 //        System.out.println(authentication.getCredentials());
 //        System.out.println(authentication.getAuthorities());
 //        System.out.println(authentication.getPrincipal());
 //        System.out.println(authentication.getName());
 //        System.out.println(authentication.getDetails());
-        return "Hello World";
-    }
+//        System.out.println(authentication.getUserId());
+//
+//        return "Hello World";
+//    }
 }

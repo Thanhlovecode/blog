@@ -2,7 +2,6 @@ package com.example.blog.controller;
 
 import com.example.blog.dto.request.TagUpdateRequest;
 import com.example.blog.dto.response.PageResponse;
-import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.ResponseData;
 import com.example.blog.dto.response.TagResponse;
 import com.example.blog.service.TagService;
@@ -38,7 +37,7 @@ public class TagController {
     public ResponseData<PageResponse<List<TagResponse>>> getTags(
             @RequestParam int page) {
         return ResponseData.successWithData("Get all tags successfully",
-                tagService.getAllTags(page));
+                tagService.getAllTags(page),HttpStatus.OK );
     }
 
 

@@ -47,7 +47,7 @@ public class ProfileController {
         PersonalInfoResponse infoResponse = profileService.getPersonalInfo(id);
 
         return ResponseEntity.ok(ResponseData.successWithData(
-                "Get personal info successfully",infoResponse
+                "Get personal info successfully",infoResponse,HttpStatus.OK
         ));
     }
 
@@ -55,7 +55,7 @@ public class ProfileController {
     public  ResponseEntity<ResponseData<ContactInfoResponse>> getContactInfo(@PathVariable Long id) {
         ContactInfoResponse contactResponse = profileService.getContactInfo(id);
         return ResponseEntity.ok(ResponseData.successWithData(
-                "Get contact info successfully",contactResponse
+                "Get contact info successfully",contactResponse,HttpStatus.OK
         ));
     }
 
@@ -66,7 +66,7 @@ public class ProfileController {
 
         String url = profileService.uploadImageUser(file,id);
         return ResponseEntity.ok(ResponseData.successWithData(
-                "Upload image successfully",url
+                "Upload image successfully",url,HttpStatus.OK
         ));
     }
 

@@ -5,18 +5,21 @@ import com.example.blog.domain.PostContent;
 import com.example.blog.domain.Profile;
 import com.example.blog.domain.Tag;
 import com.example.blog.dto.request.PostRequest;
+import com.example.blog.dto.request.PostStatusUpdateRequest;
+import com.example.blog.dto.request.PostUpdateRequest;
+import com.example.blog.dto.response.CommentResponse;
 import com.example.blog.dto.response.PageResponse;
 import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.PostResponseDetail;
-import com.example.blog.dto.request.PostStatusUpdateRequest;
-import com.example.blog.dto.request.PostUpdateRequest;
 import com.example.blog.enums.ErrorCode;
 import com.example.blog.enums.PostStatus;
 import com.example.blog.exception.AppException;
 import com.example.blog.mapper.PostMapper;
+import com.example.blog.repository.CommentRepository;
 import com.example.blog.repository.PostRepository;
 import com.example.blog.repository.ProfileRepository;
 import com.example.blog.repository.TagRepository;
+import com.example.blog.service.CommentService;
 import com.example.blog.service.PostService;
 import com.example.blog.service.RedisService;
 import com.example.blog.utils.PageUtils;
@@ -33,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -52,46 +56,68 @@ public class PostServiceImpl implements PostService {
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
     private final RedisService redisService;
+    private final CommentService commentService;
     private final PostMapper postMapper;
 
-
     @Override
-    public PageResponse<List<PostResponse>> getPublishedPostsByUserId(Long userId, int page) {
-
-        log.info("Request to get published posts for user ID: {}", userId);
-        Pageable pageable = PageUtils.createPageable(page);
-
-        Page<Post> posts = postRepository.findPostsWithTagsByUserIdAndStatus(userId, PostStatus.PUBLISHED, pageable);
-
-        return PageResponse.fromPage(posts, convertToListPostResponse(posts.getContent()));
-
+    public PageResponse<List<PostResponse>> getNewestPublishedPost(int page) {
+        log.info("Request to get newest published posts, page: {}", page);
+        Pageable pageable = PageUtils.defaultSortPageable(page);
+        return getPostsPageResponse(
+                ()-> postRepository.findNewestPostsByStatus(PostStatus.PUBLISHED,pageable)
+        );
     }
 
     @Override
-    public PageResponse<List<PostResponse>> getPublishedPostsByKeySearch(String keyword, int page, String sortBy) {
-        log.info("Request to get published posts for key word: {}", keyword);
+    public PageResponse<List<PostResponse>> getPublishedPostsByUsername(String username, int page) {
+        log.info("Request to get published posts for username: {}", username);
+        Pageable pageable = PageUtils.defaultSortPageable(page);
+        return getPostsPageResponse(
+                () -> postRepository.findPostIdsByUsernameAndStatus(username, PostStatus.PUBLISHED, pageable)
+        );
 
-        List<Long> listPostId = postRepository.findPostIdsByKeyword(keyword);
-
-        return getPostsPageResponse(listPostId, page, sortBy);
     }
 
     @Override
     public PageResponse<List<PostResponse>> getPublishedPostsByTagSlug(String slug, int page, String sortBy) {
         log.info("Request to get published posts for tag slug: {}", slug);
 
-        List<Long> listPostId = postRepository.findPostIdsByTagSlug(slug, PostStatus.PUBLISHED);
+        Pageable pageable = PageUtils.sortByFieldPageable(page, sortBy);
 
-        return getPostsPageResponse(listPostId, page, sortBy);
+        return getPostsPageResponse(
+                ()-> postRepository.findPostIdsByTagSlug(slug,PostStatus.PUBLISHED, pageable)
+        );
     }
 
-    private PageResponse<List<PostResponse>> getPostsPageResponse(List<Long> postIds, int page, String sortBy) {
-        Pageable pageable = PageUtils.createSortPageable(page, sortBy);
-        Page<Post> posts = postRepository.findPostWithTagsByIds(postIds, pageable);
-        List<PostResponse> postResponses = convertToListPostResponse(posts.getContent());
-        return PageResponse.fromPage(posts, postResponses);
+
+    private PageResponse<List<PostResponse>> getPostsPageResponse(Supplier<Page<Long>> supplier) {
+        Page<Long> pageListPostId = supplier.get();
+
+        if(pageListPostId.getContent().isEmpty()) {
+            return null;
+        }
+
+        List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent()
+                , pageListPostId.getSort());
+
+        return PageResponse.fromPage(pageListPostId, convertToListPostResponse(posts));
     }
 
+
+    @Override
+    public PageResponse<List<PostResponse>> getPublishedPostsByKeySearch(String keyword, int page, String sortBy) {
+        log.info("Request to get published posts for key word: {}", keyword);
+
+        Pageable pageable = PageUtils.defaultNoSortPageable(page);
+
+        Page<Long> pageListPostId = postRepository.findPostIdsByKeyword(keyword,PostStatus.PUBLISHED.name(), pageable);
+
+        List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent(),
+                                                                PageUtils.sortByField(sortBy));
+
+        return PageResponse.fromPage(pageListPostId,convertToListPostResponse(posts));
+
+    }
 
     private List<PostResponse> convertToListPostResponse(List<Post> posts) {
         return posts.stream()
@@ -100,10 +126,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDetail getPostBySlug(String slug) {
+    public PostResponseDetail getPostDetailBySlug(String slug) {
         Post post = findPostBySlugOrThrow(slug);
         log.info("Get post by Slug: {}", post.getSlug());
-        return postMapper.toPostResponseDetail(post);
+
+        List<CommentResponse> comments = commentService.getTop5CommentByPostId(post.getId());
+        return postMapper.toPostResponseDetail(post,comments);
     }
 
     @Override

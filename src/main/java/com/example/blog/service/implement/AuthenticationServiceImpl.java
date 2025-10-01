@@ -58,13 +58,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String tokenId = jwt.getId();
         validateRefreshToken(userId, tokenId);
 
-        User user = getUserByUsername(jwt.getSubject());
+        User user = getUserNoProfileByUsername(jwt.getSubject());
         return generatePairToken(user);
     }
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
-        User user = getUserByUsername(authenticationRequest.username());
+        User user = getUserNoProfileByUsername(authenticationRequest.username());
 
         if(!passwordEncoder.matches(authenticationRequest.password(), user.getPassword())) {
             throw new UsernameNotFoundException("Username or password is incorrect");
@@ -117,11 +117,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String keyRefreshToken = PreFixUtils.RT_WHITE_LIST + userId;
         redisService.setString(keyAccessToken,VALID_STATUS,accessTokenExpiration);
         redisService.setString(keyRefreshToken,tokenId,refreshTokenExpiration);
-
     }
 
-    private User getUserByUsername(String username){
-        return userRepository.findByUsername(username)
+    private User getUserNoProfileByUsername(String username){
+        return userRepository.findByUsernameNoFetchProfile(username)
                 .orElseThrow(()-> new UsernameNotFoundException("Username or password is incorrect"));
     }
 }

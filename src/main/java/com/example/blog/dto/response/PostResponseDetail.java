@@ -1,6 +1,7 @@
 package com.example.blog.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PostResponseDetail(
         String title,
@@ -13,5 +14,6 @@ public record PostResponseDetail(
         int totalComments,
         int totalLikes,
         String content,
-        LocalDateTime publishedAt) {
+        LocalDateTime publishedAt,
+        List<CommentResponse> comments) {
 }

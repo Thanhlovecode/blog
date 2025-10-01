@@ -1,7 +1,7 @@
 CREATE TABLE users
 (
     id         BIGINT AUTO_INCREMENT                   NOT NULL,
-    created_at datetime                               NOT NULL,
+    created_at datetime                                NOT NULL,
     updated_at datetime                                NOT NULL,
     email      VARCHAR(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     password   VARCHAR(100)                            NOT NULL,

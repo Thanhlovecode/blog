@@ -28,8 +28,9 @@ public enum ErrorCode {
 
     UNAUTHENTICATED("Unauthenticated", HttpStatus.UNAUTHORIZED),
     FORBIDDEN("You don't have permission", HttpStatus.FORBIDDEN),
-    INVALID_TOKEN("Invalid token", HttpStatus.UNAUTHORIZED);
+    INVALID_TOKEN("Invalid token", HttpStatus.UNAUTHORIZED),
 
+    COMMENT_NOT_FOUND("Comment not found", HttpStatus.NOT_FOUND);
 
 
 

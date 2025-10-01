@@ -3,16 +3,18 @@ package com.example.blog.mapper;
 
 import com.example.blog.domain.Post;
 import com.example.blog.domain.Tag;
+import com.example.blog.dto.response.CommentResponse;
 import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.PostResponseDetail;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Component
 public class PostMapper {
-    public PostResponseDetail toPostResponseDetail(Post post) {
+    public PostResponseDetail toPostResponseDetail(Post post, List<CommentResponse> comments) {
         return new PostResponseDetail(
                 post.getTitle(),
                 post.getSlug(),
@@ -24,7 +26,8 @@ public class PostMapper {
                 post.getTotalComments(),
                 post.getTotalLikes(),
                 post.getPostContent().getContent(),
-                post.getPublishedAt()
+                post.getPublishedAt(),
+                comments
         );
     }
 

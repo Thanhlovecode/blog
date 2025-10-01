@@ -1,5 +1,6 @@
 package com.example.blog.service.implement;
 
+import com.example.blog.domain.Profile;
 import com.example.blog.domain.Role;
 import com.example.blog.domain.User;
 import com.example.blog.dto.request.UserRequest;
@@ -61,12 +62,18 @@ public class UserServiceImpl implements UserService {
         Set<Role> roles = new HashSet<>();
         roleRepository.findByName(PreFixUtils.ROLE_USER).ifPresent(roles::add);
 
+
         User user = userMapper.toUser(request,roles);
         user.setPassword(passwordEncoder.encode(request.password()));
+
+        Profile profile = Profile.builder().user(user).build();
+        user.setProfile(profile);
 
         userRepository.save(user);
         log.info("User created with email: {} ", request.email());
         //mailService.sendSimpleMail(user.getEmail(),subject,content);
     }
+
+
 
 }

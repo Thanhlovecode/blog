@@ -22,7 +22,7 @@ public class AuthenticationController {
     @PostMapping("/log-in")
     public ResponseData<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) {
         return ResponseData.successWithData("Log in successfully",
-                authenticationService.authenticate(authenticationRequest));
+                authenticationService.authenticate(authenticationRequest),HttpStatus.OK);
     }
 
     @PostMapping("/log-out")
@@ -34,7 +34,7 @@ public class AuthenticationController {
     @PostMapping("/refresh-token")
     public ResponseData<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
         return ResponseData.successWithData("Refresh Token successfully",
-                authenticationService.refreshToken(refreshTokenRequest));
+                authenticationService.refreshToken(refreshTokenRequest),HttpStatus.OK );
     }
 
 

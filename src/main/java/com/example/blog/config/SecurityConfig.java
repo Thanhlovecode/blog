@@ -7,8 +7,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -20,6 +18,7 @@ public class SecurityConfig {
 
     private final CustomJwtDecoder customJwtDecoder;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
     private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**"};
 
@@ -33,7 +32,7 @@ public class SecurityConfig {
         httpSecurity.oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                         .decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                        .jwtAuthenticationConverter(customJwtAuthenticationConverter))
                                         .authenticationEntryPoint(authenticationEntryPoint))
                         .sessionManagement(session -> session
                                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // no save state server
@@ -41,14 +40,6 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(){
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
-    }
 
 
 }

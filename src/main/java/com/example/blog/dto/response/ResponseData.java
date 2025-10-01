@@ -28,10 +28,10 @@ public class ResponseData<T> {
                 .build();
     }
 
-    public static <T> ResponseData<T> successWithData(String message, T data) {
+    public static <T> ResponseData<T> successWithData(String message, T data,HttpStatus status) {
         return ResponseData.<T>builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.OK.value())
+                .status(status.value())
                 .message(message)
                 .data(data)
                 .build();
