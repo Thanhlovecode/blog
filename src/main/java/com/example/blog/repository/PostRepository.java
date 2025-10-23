@@ -71,4 +71,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 
     boolean existsBySlugAndUsername(String slug, String username);
+
+    @Modifying
+    @Query("""
+            update Post p
+            set p.totalViews = p.totalViews+ :increment
+            where p.id=:postId
+            """)
+    void incrementViewCount(Long postId,Long increment);
 }

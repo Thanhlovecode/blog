@@ -34,7 +34,7 @@ public class TagController {
 
 
     @GetMapping
-    public ResponseData<PageResponse<List<TagResponse>>> getTags(
+    public ResponseData<PageResponse<TagResponse>> getTags(
             @RequestParam int page) {
         return ResponseData.successWithData("Get all tags successfully",
                 tagService.getAllTags(page),HttpStatus.OK );

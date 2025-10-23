@@ -1,8 +1,5 @@
 package com.example.blog.security;
 
-import com.example.blog.domain.Post;
-import com.example.blog.enums.ErrorCode;
-import com.example.blog.exception.AppException;
 import com.example.blog.repository.PostRepository;
 import com.example.blog.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;

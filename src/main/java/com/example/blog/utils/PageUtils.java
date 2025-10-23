@@ -33,6 +33,10 @@ public class PageUtils {
         return Sort.by(Sort.Direction.DESC, sortField, FIELD_ID);
     }
 
+    public static Sort sortDefault(){
+        return Sort.by(Sort.Direction.DESC, FIELD_PUBLISHED, FIELD_ID);
+    }
+
 
 
 

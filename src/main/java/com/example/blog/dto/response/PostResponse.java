@@ -1,9 +1,7 @@
 package com.example.blog.dto.response;
 
 import com.example.blog.enums.PostStatus;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -12,6 +10,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostResponse {
     private Long id;
     private String title;

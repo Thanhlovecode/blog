@@ -13,19 +13,25 @@ import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.PostResponseDetail;
 import com.example.blog.enums.ErrorCode;
 import com.example.blog.enums.PostStatus;
+import com.example.blog.event.PostUpdateEvent;
+import com.example.blog.event.PostViewEvent;
 import com.example.blog.exception.AppException;
 import com.example.blog.mapper.PostMapper;
-import com.example.blog.repository.CommentRepository;
 import com.example.blog.repository.PostRepository;
 import com.example.blog.repository.ProfileRepository;
 import com.example.blog.repository.TagRepository;
 import com.example.blog.service.CommentService;
+import com.example.blog.service.PostCacheService;
 import com.example.blog.service.PostService;
 import com.example.blog.service.RedisService;
 import com.example.blog.utils.PageUtils;
+import com.example.blog.utils.SecurityUtils;
 import com.example.blog.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +44,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static com.example.blog.constants.CacheConstants.CACHE_POST_DETAIL;
+import static com.example.blog.constants.CacheConstants.POST_IDS_PAGE_CACHE;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -48,28 +57,47 @@ public class PostServiceImpl implements PostService {
     private static final int SLUG_RANDOM_LENGTH = 8;
     private static final int EXCERPT_MAX_LENGTH = 150;
 
-    private static final String POST_CREATE_KEY = "idempotency:post:created:";
-    private static final int POST_CREATE_KEY_EXPIRED = 1800; // SECOND
-
+//    private static final String POST_CREATE_KEY = "idempotency:post:created:";
+//    private static final int POST_CREATE_KEY_EXPIRED = 1800; // SECOND
 
     private final ProfileRepository profileRepository;
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
+    private final PostCacheService postCacheService;
     private final RedisService redisService;
+    private final ApplicationEventPublisher publisher;
     private final CommentService commentService;
     private final PostMapper postMapper;
 
     @Override
-    public PageResponse<List<PostResponse>> getNewestPublishedPost(int page) {
+    public PageResponse<PostResponse> getNewestPublishedPost(int page) {
         log.info("Request to get newest published posts, page: {}", page);
-        Pageable pageable = PageUtils.defaultSortPageable(page);
-        return getPostsPageResponse(
-                ()-> postRepository.findNewestPostsByStatus(PostStatus.PUBLISHED,pageable)
-        );
+        PageResponse<Long> pageListPostId = postCacheService.getPostIdsPage(page);
+
+        List<Long> postIds = pageListPostId.getContent();
+        if(postIds.isEmpty()) {
+            return PageResponse.empty();
+        }
+
+        List<PostResponse> cachedPosts = postCacheService.getListPostResponseFromCache(postIds);
+        if(!cachedPosts.isEmpty()  && cachedPosts.size() == postIds.size()) {
+            log.info("Cache hit for {} posts on page {}", cachedPosts.size(), page);
+            return pageListPostId.map(cachedPosts);
+        }
+
+        List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent(), PageUtils.sortDefault());
+
+        List<PostResponse> postResponses = convertToListPostResponse(posts);
+        postCacheService.multiSetPostResponses(postResponses);
+
+        return pageListPostId.map(postResponses);
+
     }
 
+
+
     @Override
-    public PageResponse<List<PostResponse>> getPublishedPostsByUsername(String username, int page) {
+    public PageResponse<PostResponse> getPublishedPostsByUsername(String username, int page) {
         log.info("Request to get published posts for username: {}", username);
         Pageable pageable = PageUtils.defaultSortPageable(page);
         return getPostsPageResponse(
@@ -79,7 +107,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PageResponse<List<PostResponse>> getPublishedPostsByTagSlug(String slug, int page, String sortBy) {
+    public PageResponse<PostResponse> getPublishedPostsByTagSlug(String slug, int page, String sortBy) {
         log.info("Request to get published posts for tag slug: {}", slug);
 
         Pageable pageable = PageUtils.sortByFieldPageable(page, sortBy);
@@ -90,7 +118,7 @@ public class PostServiceImpl implements PostService {
     }
 
 
-    private PageResponse<List<PostResponse>> getPostsPageResponse(Supplier<Page<Long>> supplier) {
+    private PageResponse<PostResponse> getPostsPageResponse(Supplier<Page<Long>> supplier) {
         Page<Long> pageListPostId = supplier.get();
 
         if(pageListPostId.getContent().isEmpty()) {
@@ -105,7 +133,7 @@ public class PostServiceImpl implements PostService {
 
 
     @Override
-    public PageResponse<List<PostResponse>> getPublishedPostsByKeySearch(String keyword, int page, String sortBy) {
+    public PageResponse<PostResponse> getPublishedPostsByKeySearch(String keyword, int page, String sortBy) {
         log.info("Request to get published posts for key word: {}", keyword);
 
         Pageable pageable = PageUtils.defaultNoSortPageable(page);
@@ -125,22 +153,33 @@ public class PostServiceImpl implements PostService {
                 .toList();
     }
 
+
     @Override
+    @Cacheable(
+            cacheNames = CACHE_POST_DETAIL,
+            key = "#slug",
+            unless = "#result == null || #result.publishedAt.isBefore(T(java.time.LocalDateTime).now().minusDays(7))")
     public PostResponseDetail getPostDetailBySlug(String slug) {
         Post post = findPostBySlugOrThrow(slug);
+
         log.info("Get post by Slug: {}", post.getSlug());
+
+        publisher.publishEvent(new PostViewEvent(post.getId(), SecurityUtils.getCurrentUserId()));
 
         List<CommentResponse> comments = commentService.getTop5CommentByPostId(post.getId());
         return postMapper.toPostResponseDetail(post,comments);
     }
 
+
     @Override
     @Transactional
     @PreAuthorize("@postSecurity.isPostOwner(#slug)")
+    @CacheEvict(cacheNames = CACHE_POST_DETAIL, key = "#slug")
     public void updatePost(String slug, PostUpdateRequest updateRequest) {
         Post post = findPostBySlugOrThrow(slug);
         updatePostFields(post, updateRequest);
         postRepository.save(post);
+        publisher.publishEvent(new PostUpdateEvent(postMapper.toPostResponse(post)));
         log.info("Update post with slug {}", post.getSlug());
     }
 
@@ -148,6 +187,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     @PreAuthorize("@postSecurity.isPostOwner(#slug)")
+    @CacheEvict(cacheNames = POST_IDS_PAGE_CACHE, allEntries = true)
     public void updateStatusPost(String slug, PostStatusUpdateRequest statusUpdateRequest) {
         Post post = postRepository.findPostWithoutContentBySlug(slug)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -170,19 +210,17 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void createPost(PostRequest postRequest, String requestId) {
-        String cacheKeyPost = POST_CREATE_KEY + requestId;
-        if (!redisService.setStringIfAbsent(cacheKeyPost, "1", POST_CREATE_KEY_EXPIRED)) {
-            return;
-        }
-
-        Profile profile = profileRepository.findByUserId(postRequest.userId()).
+    @PreAuthorize("isAuthenticated()")
+    @CacheEvict(cacheNames = POST_IDS_PAGE_CACHE, allEntries = true)
+    public void createPost(PostRequest postRequest) {
+        long userId = SecurityUtils.getCurrentUserId();
+        Profile profile = profileRepository.findByUserId(userId).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Post post = buildPost(postRequest, profile);
 
         postRepository.save(post);
-        log.info("Created post successfully by userId: {} with title :{}", postRequest.userId(), post.getTitle());
+        log.info("Created post successfully by userId: {} with title :{}", userId, post.getTitle());
     }
 
     private Set<Tag> findAllTagsById(Set<Long> ids) {
@@ -246,8 +284,11 @@ public class PostServiceImpl implements PostService {
         }
         post.getPostContent().setContent(updateRequest.content());
         post.setReadingTime(calculateReadingTime(updateRequest.content()));
+        post.setExcerpt(updateRequest.content().substring(0, EXCERPT_MAX_LENGTH));
         post.setTags(findAllTagsById(updateRequest.idTags()));
     }
+
+
 
 
 }

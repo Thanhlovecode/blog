@@ -15,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("${api.prefix}/posts")
 @Slf4j
@@ -32,15 +30,14 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseData<Void> createPost(@Valid @RequestBody PostRequest postRequest,
-                                         @RequestHeader("X-Request-Id") String requestId) {
-        postService.createPost(postRequest, requestId);
+    public ResponseData<Void> createPost(@Valid @RequestBody PostRequest postRequest) {
+        postService.createPost(postRequest);
         return ResponseData.
                 successWithMessage("Post Created Successfully", HttpStatus.CREATED);
     }
 
     @GetMapping("/search")
-    public ResponseData<PageResponse<List<PostResponse>>> searchPosts(@RequestParam("keyword") @NotBlank String keyword,
+    public ResponseData<PageResponse<PostResponse>> searchPosts(@RequestParam("keyword") @NotBlank String keyword,
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
@@ -49,14 +46,14 @@ public class PostController {
 
 
     @GetMapping("/user/{username}")
-    public ResponseData<PageResponse<List<PostResponse>>> getPostsByUsername(@PathVariable String username,
+    public ResponseData<PageResponse<PostResponse>> getPostsByUsername(@PathVariable String username,
                                                                              @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
                 postService.getPublishedPostsByUsername(username, page),HttpStatus.OK );
     }
 
     @GetMapping("/tags/{slug}")
-    public ResponseData<PageResponse<List<PostResponse>>> getPostsByTagSlug(@PathVariable String slug,
+    public ResponseData<PageResponse<PostResponse>> getPostsByTagSlug(@PathVariable String slug,
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
@@ -64,7 +61,7 @@ public class PostController {
     }
 
     @GetMapping("/newest")
-    public ResponseData<PageResponse<List<PostResponse>>> getNewestPosts(
+    public ResponseData<PageResponse<PostResponse>> getNewestPosts(
             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
                 postService.getNewestPublishedPost(page),HttpStatus.OK);

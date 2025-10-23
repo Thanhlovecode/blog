@@ -10,7 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -20,7 +20,7 @@ public class SecurityConfig {
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**"};
+    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**","/api/v1/posts/**"};
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {

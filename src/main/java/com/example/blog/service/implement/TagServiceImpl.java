@@ -64,7 +64,7 @@ public class TagServiceImpl implements TagService {
     @Cacheable(cacheNames = "tags",key = "'page_'+#page",
             condition = "#page<=10")
 //    @JsonCache(cacheName = "tags",timeToLive = 1800)
-    public PageResponse<List<TagResponse>> getAllTags(int page) {
+    public PageResponse<TagResponse> getAllTags(int page) {
         Page<Tag> tags = tagRepository.findAll(PageUtils.defaultSortPageable(page));
         List<TagResponse> tagResponses = tags.getContent().stream()
                 .map(tagMapper::toTagResponse)

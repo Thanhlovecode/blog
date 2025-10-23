@@ -15,8 +15,6 @@ public record PostRequest(
         @Size(min = 200, message = "Post content is very short, minimum 200 characters required")
         String content,
         PostStatus status,
-        long userId,
-
 
         @Size(min = 1, max = 10, message = "At least one tag is required")
         Set<Long> idTags) {

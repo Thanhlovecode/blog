@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class JwtEncoderConfig {
 
     @Value("${security.jwt.private-key}")

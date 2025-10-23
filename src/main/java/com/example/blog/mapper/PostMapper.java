@@ -6,6 +6,7 @@ import com.example.blog.domain.Tag;
 import com.example.blog.dto.response.CommentResponse;
 import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.PostResponseDetail;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class PostMapper {
 
     public PostResponse toPostResponse(Post post) {
         return PostResponse.builder()
+                .id(post.getId())
                 .title(post.getTitle())
                 .slug(post.getSlug())
                 .excerpt(post.getExcerpt())
