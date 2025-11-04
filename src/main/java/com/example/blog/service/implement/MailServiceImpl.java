@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "MAIL-SERVICE")
 public class MailServiceImpl implements MailService {
 
    private final JavaMailSender mailSender;
@@ -27,7 +27,7 @@ public class MailServiceImpl implements MailService {
    private String from;
 
     @Override
-    @Async
+    @Async("taskExecutor")
     @Retryable(
             retryFor = {MessagingException.class, UnsupportedEncodingException.class},
             backoff = @Backoff(delay = 2000,multiplier = 2))

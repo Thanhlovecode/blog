@@ -1,10 +1,13 @@
 package com.example.blog.controller;
 
 
+import com.example.blog.annotation.RateLimit;
 import com.example.blog.dto.request.CommentRequest;
 import com.example.blog.dto.request.CommentUpdateRequest;
 import com.example.blog.dto.response.CommentResponse;
 import com.example.blog.dto.response.ResponseData;
+import com.example.blog.enums.KeyType;
+import com.example.blog.enums.RateLimitType;
 import com.example.blog.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,10 @@ public class CommentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @RateLimit(
+            type = RateLimitType.CREATE_COMMENT,
+            keyType = KeyType.USER
+    )
     public ResponseData<CommentResponse> createComment(@RequestBody CommentRequest commentRequest) {
         return ResponseData.successWithData(
                 "Create comment successfully",
@@ -39,7 +46,7 @@ public class CommentController {
     }
 
     @DeleteMapping("{commentId}")
-    public ResponseData<CommentResponse> updateComment(@PathVariable Long commentId) {
+    public ResponseData<CommentResponse> deleteComment(@PathVariable Long commentId) {
         return ResponseData.successWithData(
                 "Deleted comment successfully",
                 commentService.deleteComment(commentId),

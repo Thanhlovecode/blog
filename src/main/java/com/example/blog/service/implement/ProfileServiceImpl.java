@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
+@Slf4j(topic = "PROFILE-SERVICE")
 public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository profileRepository;

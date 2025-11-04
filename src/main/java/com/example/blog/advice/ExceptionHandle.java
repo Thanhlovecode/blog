@@ -2,6 +2,7 @@ package com.example.blog.advice;
 
 import com.example.blog.dto.response.ErrorResponse;
 import com.example.blog.exception.AppException;
+import com.example.blog.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,12 @@ public class ExceptionHandle {
     public ResponseEntity<ErrorResponse> handleAppException(AppException exception
             , HttpServletRequest request) {
         return handleErrorResponse(exception.getMessage(), request, exception.getStatus());
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException exception
+            , HttpServletRequest request) {
+        return handleErrorResponse(exception.getMessage(), request,HttpStatus.TOO_MANY_REQUESTS);
     }
 
 

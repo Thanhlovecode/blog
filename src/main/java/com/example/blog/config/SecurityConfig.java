@@ -3,6 +3,7 @@ package com.example.blog.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,13 +21,14 @@ public class SecurityConfig {
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**","/api/v1/posts/**"};
+    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**"};
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(requestMatcherRegistry ->
                 requestMatcherRegistry.requestMatchers(PUBLIC_ENDPOINTS)
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/posts/**").permitAll()
                         .anyRequest()
                         .authenticated());
         httpSecurity.oauth2ResourceServer(oauth2 ->

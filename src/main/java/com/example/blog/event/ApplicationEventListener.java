@@ -46,7 +46,7 @@ public class ApplicationEventListener {
     @Async("taskExecutor")
     @EventListener
     public void handleCountPostView(PostViewEvent event){
-        viewCounterService.recordViewCounter(event.userId(), event.postId());
+        viewCounterService.recordViewCounter(event.postId(), event.clientIp());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

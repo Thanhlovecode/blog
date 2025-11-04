@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class PostMapper {
     public PostResponseDetail toPostResponseDetail(Post post, List<CommentResponse> comments) {
         return new PostResponseDetail(
+                post.getId(),
                 post.getTitle(),
                 post.getSlug(),
                 post.getUsername(),

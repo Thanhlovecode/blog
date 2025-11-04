@@ -78,5 +78,5 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             set p.totalViews = p.totalViews+ :increment
             where p.id=:postId
             """)
-    void incrementViewCount(Long postId,Long increment);
+    void incrementViewCount(Long postId,Integer increment);
 }

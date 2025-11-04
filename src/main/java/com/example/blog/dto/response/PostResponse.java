@@ -1,6 +1,8 @@
 package com.example.blog.dto.response;
 
 import com.example.blog.enums.PostStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,6 +14,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PostResponse {
     private Long id;
     private String title;
@@ -22,6 +25,7 @@ public class PostResponse {
     private int readingTime;
     private String thumbnailUrl;
     private int totalComments;
+
     private int totalViews;
     private PostStatus status;
     private LocalDateTime publishedAt;

@@ -1,7 +1,6 @@
 package com.example.blog.service;
 
 import com.example.blog.dto.response.PostResponse;
-import org.apache.catalina.LifecycleState;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.List;
@@ -15,8 +14,8 @@ public interface RedisService {
     boolean setStringIfAbsent(String key, String value,int expire);
     void incrementSortedSetScore(String key, String member,double score);
     Set<ZSetOperations.TypedTuple<Object>> popMinFromSortedSet(String key,long count);
-    List<PostResponse> multiGetPostResponses(List<String> keys);
-    void multiSetPostResponses(Map<String,Object> batchMap, long expire);
+    <T>List<T> multiGetValues(List<String> keys, Class<T> type);
+    <T> void multiSetWithExpire(Map<String,T> batchMap, long expire);
     void setObject(String key, Object value,long expire);
-
+    void multiIncrementKeys(Map<String,Integer> keyIncrements);
 }

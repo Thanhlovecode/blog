@@ -1,5 +1,6 @@
 package com.example.blog.service.implement;
 
+import com.example.blog.config.JwtKeyConfig;
 import com.example.blog.domain.Role;
 import com.example.blog.domain.User;
 import com.example.blog.enums.TypeToken;
@@ -23,27 +24,18 @@ public class TokenServiceImpl implements TokenService {
 
 
     private final JwtEncoder jwtEncoder;
-
-    @Value("${token.access-duration}")
-    private long accessTokenExpiration;
-
-    @Value("${security.jwt.public-key}")
-    private RSAPublicKey publicKey;
-
-    @Value("${token.refresh-duration}")
-    private long refreshTokenExpiration;
-
+    private final JwtKeyConfig jwtKeyConfig;
     private static final String TYPE_TOKEN = "type_token";
 
 
     @Override
     public String createAccessToken(User user, String tokenId, TypeToken type) {
-        return generateToken(user,tokenId,TypeToken.ACCESS_TOKEN,accessTokenExpiration);
+        return generateToken(user,tokenId,TypeToken.ACCESS_TOKEN, jwtKeyConfig.getAccessDuration());
     }
 
     @Override
     public String createRefreshToken(User user, String tokenId, TypeToken type) {
-        return generateToken(user,tokenId,TypeToken.REFRESH_TOKEN,refreshTokenExpiration);
+        return generateToken(user,tokenId,TypeToken.REFRESH_TOKEN, jwtKeyConfig.getRefreshDuration());
     }
 
     private String generateToken(User user, String tokenId, TypeToken typeToken,Long expireTimeToken){
@@ -67,7 +59,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public Jwt validateToken(String token){
         NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder
-                .withPublicKey(publicKey)
+                .withPublicKey(jwtKeyConfig.getPublicKey())
                 .build();
         return nimbusJwtDecoder.decode(token);
     }

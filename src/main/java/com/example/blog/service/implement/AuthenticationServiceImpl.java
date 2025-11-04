@@ -1,5 +1,6 @@
 package com.example.blog.service.implement;
 
+import com.example.blog.config.JwtKeyConfig;
 import com.example.blog.domain.User;
 import com.example.blog.dto.request.AuthenticationRequest;
 import com.example.blog.dto.request.RefreshTokenRequest;
@@ -26,7 +27,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Service
-@Slf4j
+@Slf4j(topic = "AUTHENTICATION-SERVICE")
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
@@ -34,14 +35,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final RedisService redisService;
+    private final JwtKeyConfig jwtKeyConfig;
 
     private static final String VALID_STATUS = "1";
 
-    @Value("${token.access-duration}")
-    private long accessTokenExpiration;
 
-    @Value("${token.refresh-duration}")
-    private long refreshTokenExpiration;
 
     @Override
     public void logout(String authHeader) {
@@ -107,7 +105,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String keyAccess = PreFixUtils.AT_BLACK_LIST + tokenId;
         String keyRefresh = PreFixUtils.RT_BLACK_LIST + tokenId;
         redisService.setString(keyAccess,VALID_STATUS, Duration.between(Instant.now(), jwt.getExpiresAt()).getSeconds());
-        redisService.setString(keyRefresh,VALID_STATUS,refreshTokenExpiration);
+        redisService.setString(keyRefresh,VALID_STATUS, jwtKeyConfig.getRefreshDuration());
 
     }
 
@@ -115,8 +113,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private void saveTokenWhiteListOnRedis(Long userId,String tokenId) {
         String keyAccessToken = PreFixUtils.AT_WHITE_LIST + userId;
         String keyRefreshToken = PreFixUtils.RT_WHITE_LIST + userId;
-        redisService.setString(keyAccessToken,VALID_STATUS,accessTokenExpiration);
-        redisService.setString(keyRefreshToken,tokenId,refreshTokenExpiration);
+        redisService.setString(keyAccessToken,VALID_STATUS, jwtKeyConfig.getAccessDuration());
+        redisService.setString(keyRefreshToken,tokenId, jwtKeyConfig.getRefreshDuration());
     }
 
     private User getUserNoProfileByUsername(String username){

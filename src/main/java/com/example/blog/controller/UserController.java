@@ -1,7 +1,10 @@
 package com.example.blog.controller;
 
+import com.example.blog.annotation.RateLimit;
 import com.example.blog.dto.request.UserRequest;
 import com.example.blog.dto.response.ResponseData;
+import com.example.blog.enums.KeyType;
+import com.example.blog.enums.RateLimitType;
 import com.example.blog.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,10 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @RateLimit(
+            type = RateLimitType.REGISTER,
+            keyType = KeyType.IP
+    )
     public ResponseData<Void> createUser(@RequestBody @Valid UserRequest userRequest) {
         userService.createUser(userRequest);
         return ResponseData.successWithMessage("User Created Successfully", HttpStatus.CREATED);

@@ -18,12 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.example.blog.constants.CacheConstants.CACHE_POST_METADATA;
-import static com.example.blog.constants.CacheConstants.POST_IDS_PAGE_CACHE;
+import static com.example.blog.constants.CacheConstants.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "POST-CACHE-SERVICE")
 public class PostCacheServiceImpl implements PostCacheService {
 
 
@@ -43,8 +42,24 @@ public class PostCacheServiceImpl implements PostCacheService {
 
     @Override
     public List<PostResponse> getListPostResponseFromCache(List<Long> postIds) {
-        List<String> cacheKeys = buildListCacheKeys(postIds);
-        return redisService.multiGetPostResponses(cacheKeys);
+        List<String> cacheKeys = buildListCacheKeys(postIds,CACHE_POST_METADATA);
+        return redisService.multiGetValues(cacheKeys,PostResponse.class);
+    }
+
+    @Override
+    public List<Integer> getListViewCountFromCache(List<Long> postIds) {
+        List<String> cacheKeys = buildListCacheKeys(postIds,CACHE_POST_VIEW_COUNT);
+        return redisService.multiGetValues(cacheKeys,Integer.class);
+    }
+
+    @Override
+    public void multiSetViewCounts(List<PostResponse> postResponses) {
+        Map<String, Integer> viewCountMap = postResponses.stream()
+                .collect(Collectors.toMap(
+                        postResponse -> CACHE_POST_VIEW_COUNT + postResponse.getId(),
+                         PostResponse::getTotalViews
+                ));
+        redisService.multiSetWithExpire(viewCountMap, EXPIRE_TIME);
     }
 
     @Override
@@ -54,12 +69,12 @@ public class PostCacheServiceImpl implements PostCacheService {
                         postResponse -> CACHE_POST_METADATA + postResponse.getId(),
                         postResponse -> postResponse
                 ));
-        redisService.multiSetPostResponses(keyValueMap,EXPIRE_TIME);
+        redisService.multiSetWithExpire(keyValueMap,EXPIRE_TIME);
     }
 
-    private List<String> buildListCacheKeys(List<Long> postIds) {
+    private List<String> buildListCacheKeys(List<Long> postIds,String cacheKeyPrefix) {
         return postIds.stream()
-                .map(id -> CACHE_POST_METADATA + id)
+                .map(id -> cacheKeyPrefix + id)
                 .toList();
     }
 }

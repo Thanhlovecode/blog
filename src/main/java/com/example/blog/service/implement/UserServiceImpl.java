@@ -26,7 +26,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
+@Slf4j(topic = "USER-SERVICE")
 public class UserServiceImpl implements UserService {
 
 

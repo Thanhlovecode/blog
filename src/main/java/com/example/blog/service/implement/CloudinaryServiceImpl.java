@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "CLOUDINARY-SERVICE")
 public class CloudinaryServiceImpl implements CloudinaryService {
 
     private static final String FOLDER = "folder";

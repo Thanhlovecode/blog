@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "REDIS-SERVICE")
 public class RedisServiceImpl implements RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -24,6 +24,29 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void incrementSortedSetScore(String key, String member, double score) {
         redisTemplate.opsForZSet().incrementScore(key, member, score);
+    }
+
+
+    @Override
+    public void multiIncrementKeys(Map<String, Integer> keyIncrements) {
+        if (keyIncrements == null || keyIncrements.isEmpty()) return;
+
+        long startTime = System.currentTimeMillis();
+
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            var keySerializer = redisTemplate.getStringSerializer();
+
+            for (Map.Entry<String, Integer> entry : keyIncrements.entrySet()) {
+                byte[] rawKey = keySerializer.serialize(entry.getKey());
+                if (rawKey != null) {
+                    connection.stringCommands().incrBy(rawKey, entry.getValue());
+                }
+            }
+            return null;
+        });
+
+        log.info("Pipelined multiIncrement executed in {} ms ({} keys)",
+                System.currentTimeMillis() - startTime, keyIncrements.size());
     }
 
 
@@ -37,7 +60,7 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void multiSetPostResponses(Map<String, Object> keyValueMap, long expire) {
+    public <T> void multiSetWithExpire(Map<String, T> keyValueMap, long expire) {
         if (keyValueMap == null || keyValueMap.isEmpty()) {
             return;
         }
@@ -60,26 +83,30 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public List<PostResponse> multiGetPostResponses(List<String> keys) {
-       return redisTemplate.opsForValue().multiGet(keys)
-               .stream()
-               .filter(Objects::nonNull)
-               .map(obj -> (PostResponse) obj)
-               .toList();
+    public <T> List<T> multiGetValues(List<String> keys, Class<T> type) {
+        return redisTemplate.opsForValue().multiGet(keys)
+                .stream()
+                .filter(Objects::nonNull)
+                .map(type::cast)
+                .toList();
     }
 
     @Override
     public Set<ZSetOperations.TypedTuple<Object>> popMinFromSortedSet(String key, long count) {
+        long size = redisTemplate.opsForZSet().zCard(key);
+        if (size == 0) {
+            return Collections.emptySet();
+        }
         return redisTemplate.opsForZSet().popMin(key, count);
     }
 
 
     @Override
-    public void setString(String key, String value,long expire) {
-        if(!StringUtils.hasLength(key)){
+    public void setString(String key, String value, long expire) {
+        if (!StringUtils.hasLength(key)) {
             return;
         }
-        redisTemplate.opsForValue().set(key, value,expire, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
         log.info("set key:{}", key);
     }
 
@@ -93,7 +120,7 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public void deleteKey(String key) {
-        if(!StringUtils.hasLength(key)){
+        if (!StringUtils.hasLength(key)) {
             return;
         }
         redisTemplate.unlink(key);

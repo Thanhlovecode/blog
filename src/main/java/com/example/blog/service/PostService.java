@@ -9,7 +9,7 @@ import com.example.blog.dto.request.PostUpdateRequest;
 
 public interface PostService {
     void createPost(PostRequest postRequest);
-    PostResponseDetail getPostDetailBySlug(String slug);
+    PostResponseDetail getPostDetailBySlug(String slug,String clientIp);
     void updateStatusPost(String slug, PostStatusUpdateRequest status);
     void updatePost(String slug, PostUpdateRequest updateRequest);
     PageResponse<PostResponse> getPublishedPostsByUsername(String username,int page);

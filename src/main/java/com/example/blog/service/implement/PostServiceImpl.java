@@ -23,7 +23,6 @@ import com.example.blog.repository.TagRepository;
 import com.example.blog.service.CommentService;
 import com.example.blog.service.PostCacheService;
 import com.example.blog.service.PostService;
-import com.example.blog.service.RedisService;
 import com.example.blog.utils.PageUtils;
 import com.example.blog.utils.SecurityUtils;
 import com.example.blog.utils.SlugUtil;
@@ -57,14 +56,11 @@ public class PostServiceImpl implements PostService {
     private static final int SLUG_RANDOM_LENGTH = 8;
     private static final int EXCERPT_MAX_LENGTH = 150;
 
-//    private static final String POST_CREATE_KEY = "idempotency:post:created:";
-//    private static final int POST_CREATE_KEY_EXPIRED = 1800; // SECOND
 
     private final ProfileRepository profileRepository;
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
     private final PostCacheService postCacheService;
-    private final RedisService redisService;
     private final ApplicationEventPublisher publisher;
     private final CommentService commentService;
     private final PostMapper postMapper;
@@ -82,6 +78,10 @@ public class PostServiceImpl implements PostService {
         List<PostResponse> cachedPosts = postCacheService.getListPostResponseFromCache(postIds);
         if(!cachedPosts.isEmpty()  && cachedPosts.size() == postIds.size()) {
             log.info("Cache hit for {} posts on page {}", cachedPosts.size(), page);
+            List<Integer> viewCounts = postCacheService.getListViewCountFromCache(postIds);
+            if(!viewCounts.isEmpty() && viewCounts.size() == postIds.size()) {
+                setViewCountsToPostResponses(cachedPosts, viewCounts);
+            }
             return pageListPostId.map(cachedPosts);
         }
 
@@ -89,11 +89,17 @@ public class PostServiceImpl implements PostService {
 
         List<PostResponse> postResponses = convertToListPostResponse(posts);
         postCacheService.multiSetPostResponses(postResponses);
+        postCacheService.multiSetViewCounts(postResponses);
 
         return pageListPostId.map(postResponses);
 
     }
 
+    private void setViewCountsToPostResponses(List<PostResponse> postResponses, List<Integer> viewCounts) {
+        for (int i = 0; i < postResponses.size(); i++) {
+            postResponses.get(i).setTotalViews(viewCounts.get(i));
+        }
+    }
 
 
     @Override
@@ -157,14 +163,13 @@ public class PostServiceImpl implements PostService {
     @Override
     @Cacheable(
             cacheNames = CACHE_POST_DETAIL,
-            key = "#slug",
-            unless = "#result == null || #result.publishedAt.isBefore(T(java.time.LocalDateTime).now().minusDays(7))")
-    public PostResponseDetail getPostDetailBySlug(String slug) {
+            key = "#slug")
+//            unless = "#result == null || #result.publishedAt.isBefore(T(java.time.LocalDateTime).now().minusDays(7))")
+    public PostResponseDetail getPostDetailBySlug(String slug, String clientIp) {
         Post post = findPostBySlugOrThrow(slug);
 
         log.info("Get post by Slug: {}", post.getSlug());
 
-        publisher.publishEvent(new PostViewEvent(post.getId(), SecurityUtils.getCurrentUserId()));
 
         List<CommentResponse> comments = commentService.getTop5CommentByPostId(post.getId());
         return postMapper.toPostResponseDetail(post,comments);
@@ -187,7 +192,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     @PreAuthorize("@postSecurity.isPostOwner(#slug)")
-    @CacheEvict(cacheNames = POST_IDS_PAGE_CACHE, allEntries = true)
+    @CacheEvict(cacheNames = {POST_IDS_PAGE_CACHE,CACHE_POST_DETAIL}, allEntries = true)
     public void updateStatusPost(String slug, PostStatusUpdateRequest statusUpdateRequest) {
         Post post = postRepository.findPostWithoutContentBySlug(slug)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -220,7 +225,7 @@ public class PostServiceImpl implements PostService {
         Post post = buildPost(postRequest, profile);
 
         postRepository.save(post);
-        log.info("Created post successfully by userId: {} with title :{}", userId, post.getTitle());
+        log.info("Created post successfully by username: {} with title :{}", post.getDisplayName(), post.getTitle());
     }
 
     private Set<Tag> findAllTagsById(Set<Long> ids) {

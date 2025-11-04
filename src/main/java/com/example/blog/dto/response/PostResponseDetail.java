@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record PostResponseDetail(
+        Long id,
         String title,
         String slug,
         String username,
