@@ -56,6 +56,8 @@ public class ExceptionHandle {
         return handleErrorResponse(exception.getMessage(), request, HttpStatus.FORBIDDEN);
     }
 
+
+
     private ResponseEntity<ErrorResponse> handleErrorResponse(String message, HttpServletRequest servletRequest
             , HttpStatus status) {
         return ResponseEntity.status(status).body(

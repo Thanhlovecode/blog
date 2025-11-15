@@ -2,12 +2,14 @@ package com.example.blog.controller;
 
 import com.example.blog.annotation.RateLimit;
 import com.example.blog.dto.request.AuthenticationRequest;
+import com.example.blog.dto.request.GoogleLoginRequest;
 import com.example.blog.dto.request.RefreshTokenRequest;
 import com.example.blog.dto.response.AuthenticationResponse;
 import com.example.blog.dto.response.ResponseData;
 import com.example.blog.enums.KeyType;
 import com.example.blog.enums.RateLimitType;
 import com.example.blog.service.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +32,13 @@ public class AuthenticationController {
     public ResponseData<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) {
         return ResponseData.successWithData("Log in successfully",
                 authenticationService.authenticate(authenticationRequest),HttpStatus.OK);
+    }
+
+
+    @PostMapping("/log-in/google")
+    public ResponseData<AuthenticationResponse> loginWithGoogle(@RequestBody @Valid GoogleLoginRequest googleLoginRequest) {
+        return ResponseData.successWithData("Log in successfully",
+                authenticationService.authenticateWithGoogle(googleLoginRequest),HttpStatus.OK);
     }
 
     @PostMapping("/log-out")

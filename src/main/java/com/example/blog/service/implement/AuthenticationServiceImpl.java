@@ -1,13 +1,19 @@
 package com.example.blog.service.implement;
 
 import com.example.blog.config.JwtKeyConfig;
+import com.example.blog.domain.Profile;
+import com.example.blog.domain.Role;
 import com.example.blog.domain.User;
 import com.example.blog.dto.request.AuthenticationRequest;
+import com.example.blog.dto.request.GoogleLoginRequest;
 import com.example.blog.dto.request.RefreshTokenRequest;
 import com.example.blog.dto.response.AuthenticationResponse;
+import com.example.blog.dto.response.GoogleUserInfo;
 import com.example.blog.enums.ErrorCode;
 import com.example.blog.enums.TypeToken;
+import com.example.blog.enums.UserStatus;
 import com.example.blog.exception.AppException;
+import com.example.blog.repository.RoleRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.AuthenticationService;
 import com.example.blog.service.RedisService;
@@ -20,10 +26,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -35,6 +45,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final RedisService redisService;
+    private final RoleRepository roleRepository;
+    private final GoogleTokenVerifierService googleTokenVerifierService;
     private final JwtKeyConfig jwtKeyConfig;
 
     private static final String VALID_STATUS = "1";
@@ -48,6 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         saveTokenBlackListOnRedis(jwt);
         log.info("logout success");
     }
+
 
     @Override
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
@@ -69,6 +82,60 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         return generatePairToken(user);
+    }
+
+    @Override
+    @Transactional
+    public AuthenticationResponse authenticateWithGoogle(GoogleLoginRequest request) {
+        GoogleUserInfo googleInfo = googleTokenVerifierService.verifyAndExtract(request.idToken());
+        return userRepository.findByEmail(googleInfo.getEmail())
+                .map(user -> processExistingUser(user, googleInfo))
+                .orElseGet(() -> registerNewGoogleUser(googleInfo));
+    }
+
+    private AuthenticationResponse processExistingUser(User user, GoogleUserInfo googleInfo) {
+
+        if (!hasLinkedGoogleAccount(user)) {
+            user.setGoogleId(googleInfo.getGoogleId());
+        }
+
+        if (!StringUtils.hasLength(user.getProfile().getThumbnailUrl())) {
+            user.getProfile().setThumbnailUrl(googleInfo.getPicture());
+        }
+
+        return generatePairToken(user);
+    }
+
+    private boolean hasLinkedGoogleAccount(User user) {
+        return StringUtils.hasLength(user.getGoogleId());
+    }
+
+    private AuthenticationResponse registerNewGoogleUser(GoogleUserInfo googleUserInfo) {
+        Set<Role> roles = new HashSet<>();
+        roleRepository.findByName(PreFixUtils.ROLE_USER).ifPresent(roles::add);
+
+        User user = User.builder()
+                .fullName(googleUserInfo.getName())
+                .roles(roles)
+                .googleId(googleUserInfo.getGoogleId())
+                .status(UserStatus.ACTIVE)
+                .email(googleUserInfo.getEmail())
+                .username(generateUsernameFromGoogle(googleUserInfo.getEmail()))
+                .build();
+
+        Profile profile = Profile.builder()
+                .firstName(googleUserInfo.getFirstName())
+                .lastName(googleUserInfo.getLastName())
+                .thumbnailUrl(googleUserInfo.getPicture())
+                .user(user).build();
+
+        user.setProfile(profile);
+        userRepository.save(user);
+        return generatePairToken(user);
+    }
+
+    private String generateUsernameFromGoogle(String email){
+        return email.split("@")[0];
     }
 
     private void validateRefreshToken(long userId,String tokenId){

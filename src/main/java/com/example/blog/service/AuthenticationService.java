@@ -1,6 +1,7 @@
 package com.example.blog.service;
 
 import com.example.blog.dto.request.AuthenticationRequest;
+import com.example.blog.dto.request.GoogleLoginRequest;
 import com.example.blog.dto.request.RefreshTokenRequest;
 import com.example.blog.dto.response.AuthenticationResponse;
 
@@ -9,5 +10,5 @@ public interface AuthenticationService {
     void logout(String authHeader);
     AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest);
 
-
+    AuthenticationResponse authenticateWithGoogle(GoogleLoginRequest googleLoginRequest);
 }

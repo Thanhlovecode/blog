@@ -30,7 +30,9 @@ public enum ErrorCode {
     FORBIDDEN("You don't have permission", HttpStatus.FORBIDDEN),
     INVALID_TOKEN("Invalid token", HttpStatus.UNAUTHORIZED),
 
-    COMMENT_NOT_FOUND("Comment not found", HttpStatus.NOT_FOUND);
+    COMMENT_NOT_FOUND("Comment not found", HttpStatus.NOT_FOUND),
+
+    GOOGLE_TOKEN_INVALID("Google token is invalid", HttpStatus.UNAUTHORIZED);
 
 
 

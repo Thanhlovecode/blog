@@ -19,8 +19,9 @@ public class User extends BaseEntity {
     @Column(unique = true, nullable = false, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
     private String email;
 
-    @Column(nullable = false)
     private String password;
+
+    private String googleId;
 
     @Column(nullable = false)
     private String fullName;

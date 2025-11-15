@@ -13,6 +13,7 @@ import com.example.blog.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ public class PasswordServiceImpl implements PasswordService {
     private final MailService mailService;
     private final RedisService redisService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override
@@ -79,7 +81,8 @@ public class PasswordServiceImpl implements PasswordService {
         checkValidEmailAndPassword(resetPasswordAllowed, passwordRequest);
 
         User user = getUserByEmail(passwordRequest.email());
-        user.setPassword(passwordRequest.password());
+
+        user.setPassword(passwordEncoder.encode(passwordRequest.password()));
         userRepository.save(user);
         redisService.deleteKey(key);
 
