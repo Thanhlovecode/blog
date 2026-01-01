@@ -1,6 +1,6 @@
 package com.example.blog.config;
 
-import com.example.blog.utils.PreFixUtils;
+import com.example.blog.utils.TokenUtils;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,7 +22,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Collection<GrantedAuthority> authorities = jwtGrantedAuthoritiesConverter.convert(jwt);
-        Long userId = jwt.getClaim(PreFixUtils.USER_ID);
+        Long userId = jwt.getClaim(TokenUtils.USER_ID);
         return new CustomAuthenticationToken(jwt, authorities, userId);
     }
 }

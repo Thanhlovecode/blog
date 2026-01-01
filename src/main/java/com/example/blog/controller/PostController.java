@@ -59,7 +59,8 @@ public class PostController {
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                       @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByKeySearch(keyword, page, sortBy),HttpStatus.OK);
+                postService.getPublishedPostsByKeySearch(keyword, page, sortBy),
+                HttpStatus.OK);
     }
 
 
@@ -67,7 +68,8 @@ public class PostController {
     public ResponseData<PageResponse<PostResponse>> getPostsByUsername(@PathVariable String username,
                                                                              @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByUsername(username, page),HttpStatus.OK );
+                postService.getPublishedPostsByUsername(username, page),
+                HttpStatus.OK );
     }
 
     @GetMapping("/tags/{slug}")
@@ -75,25 +77,29 @@ public class PostController {
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page,
                                                                             @RequestParam(required = false, defaultValue = DEFAULT_SORT_BY) String sortBy) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getPublishedPostsByTagSlug(slug, page, sortBy),HttpStatus.OK);
+                postService.getPublishedPostsByTagSlug(slug, page, sortBy),
+                HttpStatus.OK);
     }
 
     @GetMapping("/newest")
     public ResponseData<PageResponse<PostResponse>> getNewestPosts(
             @RequestParam(required = false, defaultValue = DEFAULT_PAGE_NO) int page) {
         return ResponseData.successWithData(RETURN_MESSAGE_POST,
-                postService.getNewestPublishedPost(page),HttpStatus.OK);
+                postService.getNewestPublishedPost(page),
+                HttpStatus.OK);
     }
 
     @GetMapping("/{slug}")
     public ResponseData<PostResponseDetail> getPostDetailBySlug(@PathVariable String slug, HttpServletRequest request) {
         String clientIp = SecurityUtils.getIpAddress(request);
+        String userAgent = Optional.ofNullable(request.getHeader("User-Agent")).orElse("unknown-agent");
         PostResponseDetail postResponseDetail = postService.getPostDetailBySlug(slug, clientIp);
 
-        publisher.publishEvent(new PostViewEvent(postResponseDetail.id(), clientIp));
+        publisher.publishEvent(new PostViewEvent(postResponseDetail.getId(), clientIp, userAgent));
 
         return ResponseData.successWithData(
-                "Get Post by Slug Successfully", postResponseDetail,HttpStatus.OK
+                "Get Post by Slug Successfully",
+                postResponseDetail,HttpStatus.OK
         );
     }
 
@@ -102,7 +108,8 @@ public class PostController {
     public ResponseData<Void> updateStatusPost(@PathVariable String slug,
                                                @RequestBody @Valid PostStatusUpdateRequest status) {
         postService.updateStatusPost(slug, status);
-        return ResponseData.successWithMessage("Post Updated Status Successfully",
+        return ResponseData.successWithMessage(
+                "Post Updated Status Successfully",
                 HttpStatus.OK);
     }
 

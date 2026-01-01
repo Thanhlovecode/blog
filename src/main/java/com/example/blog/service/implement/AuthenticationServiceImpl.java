@@ -18,10 +18,9 @@ import com.example.blog.repository.UserRepository;
 import com.example.blog.service.AuthenticationService;
 import com.example.blog.service.RedisService;
 import com.example.blog.service.TokenService;
-import com.example.blog.utils.PreFixUtils;
+import com.example.blog.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -32,7 +31,6 @@ import org.springframework.util.StringUtils;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -65,7 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         Jwt jwt = tokenService.validateToken(refreshTokenRequest.refreshToken());
-        long userId = Long.parseLong(jwt.getClaimAsString(PreFixUtils.USER_ID));
+        long userId = Long.parseLong(jwt.getClaimAsString(TokenUtils.USER_ID));
         String tokenId = jwt.getId();
         validateRefreshToken(userId, tokenId);
 
@@ -112,10 +110,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private AuthenticationResponse registerNewGoogleUser(GoogleUserInfo googleUserInfo) {
         Set<Role> roles = new HashSet<>();
-        roleRepository.findByName(PreFixUtils.ROLE_USER).ifPresent(roles::add);
+        roleRepository.findByName(TokenUtils.ROLE_USER).ifPresent(roles::add);
 
         User user = User.builder()
-                .fullName(googleUserInfo.getName())
                 .roles(roles)
                 .googleId(googleUserInfo.getGoogleId())
                 .status(UserStatus.ACTIVE)
@@ -123,7 +120,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .username(generateUsernameFromGoogle(googleUserInfo.getEmail()))
                 .build();
 
+
         Profile profile = Profile.builder()
+                .fullName(googleUserInfo.getName())
                 .firstName(googleUserInfo.getFirstName())
                 .lastName(googleUserInfo.getLastName())
                 .thumbnailUrl(googleUserInfo.getPicture())
@@ -139,11 +138,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void validateRefreshToken(long userId,String tokenId){
-        String accessKey = PreFixUtils.AT_WHITE_LIST + userId;
-        String refreshKey = PreFixUtils.RT_WHITE_LIST + userId;
+        String accessKey = TokenUtils.AT_WHITE_LIST + userId;
+        String refreshKey = TokenUtils.RT_WHITE_LIST + userId;
 
         String refreshTokenAvailable = redisService.getString(refreshKey);
-        String refreshKeyBlackList = redisService.getString(PreFixUtils.RT_BLACK_LIST + tokenId);
+        String refreshKeyBlackList = redisService.getString(TokenUtils.RT_BLACK_LIST + tokenId);
 
         // suspected hacker used token illegally
         if (!tokenId.equals(refreshTokenAvailable) || StringUtils.hasLength(refreshKeyBlackList)) {
@@ -169,8 +168,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void saveTokenBlackListOnRedis(Jwt jwt) {
         String tokenId = jwt.getId();
-        String keyAccess = PreFixUtils.AT_BLACK_LIST + tokenId;
-        String keyRefresh = PreFixUtils.RT_BLACK_LIST + tokenId;
+        String keyAccess = TokenUtils.AT_BLACK_LIST + tokenId;
+        String keyRefresh = TokenUtils.RT_BLACK_LIST + tokenId;
         redisService.setString(keyAccess,VALID_STATUS, Duration.between(Instant.now(), jwt.getExpiresAt()).getSeconds());
         redisService.setString(keyRefresh,VALID_STATUS, jwtKeyConfig.getRefreshDuration());
 
@@ -178,8 +177,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     private void saveTokenWhiteListOnRedis(Long userId,String tokenId) {
-        String keyAccessToken = PreFixUtils.AT_WHITE_LIST + userId;
-        String keyRefreshToken = PreFixUtils.RT_WHITE_LIST + userId;
+        String keyAccessToken = TokenUtils.AT_WHITE_LIST + userId;
+        String keyRefreshToken = TokenUtils.RT_WHITE_LIST + userId;
         redisService.setString(keyAccessToken,VALID_STATUS, jwtKeyConfig.getAccessDuration());
         redisService.setString(keyRefreshToken,tokenId, jwtKeyConfig.getRefreshDuration());
     }

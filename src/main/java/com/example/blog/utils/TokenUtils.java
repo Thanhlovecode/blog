@@ -1,6 +1,6 @@
 package com.example.blog.utils;
 
-public class PreFixUtils {
+public class TokenUtils {
     public static final String AT_BLACK_LIST = "ACCESS_TOKEN_BLACK_LIST:";
     public static final String AT_WHITE_LIST = "ACCESS_TOKEN_WHITE_LIST:";
     public static final String RT_WHITE_LIST = "REFRESH_TOKEN_WHITE_LIST:";

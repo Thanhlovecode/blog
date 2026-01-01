@@ -2,6 +2,7 @@ package com.example.blog.event;
 
 import com.example.blog.repository.PostRepository;
 import com.example.blog.service.CloudinaryService;
+import com.example.blog.service.PostCacheService;
 import com.example.blog.service.RedisService;
 import com.example.blog.service.ViewCounterService;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class ApplicationEventListener {
     private final CloudinaryService cloudinaryService;
     private final ViewCounterService viewCounterService;
     private final RedisService redisService;
+    private final PostCacheService postCacheService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async("taskExecutor")
@@ -46,7 +48,7 @@ public class ApplicationEventListener {
     @Async("taskExecutor")
     @EventListener
     public void handleCountPostView(PostViewEvent event){
-        viewCounterService.recordViewCounter(event.postId(), event.clientIp());
+        viewCounterService.recordViewCounter(event.postId(), event.clientIp(),event.userAgent());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -54,6 +56,12 @@ public class ApplicationEventListener {
     public void handleUpdateCachePostResponse(PostUpdateEvent event){
         String cachePostMetadataKey = CACHE_POST_METADATA + event.postResponse().getId();
         redisService.setObject(cachePostMetadataKey, event.postResponse(), EXPIRE_TIME);
+    }
+
+    @Async("taskExecutor")
+    @EventListener
+    public void handleWarmUpViewCounts(WarmUpViewCountsEvent event){
+        postCacheService.hashMultiSetViewCounts(event.postIdViewCounts());
     }
 
 }

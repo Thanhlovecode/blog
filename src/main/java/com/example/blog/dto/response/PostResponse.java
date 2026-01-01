@@ -26,7 +26,7 @@ public class PostResponse {
     private String thumbnailUrl;
     private int totalComments;
 
-    private int totalViews;
+    private long totalViews;
     private PostStatus status;
     private LocalDateTime publishedAt;
     private Set<String> tags;

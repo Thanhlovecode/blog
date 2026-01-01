@@ -32,7 +32,11 @@ public enum ErrorCode {
 
     COMMENT_NOT_FOUND("Comment not found", HttpStatus.NOT_FOUND),
 
-    GOOGLE_TOKEN_INVALID("Google token is invalid", HttpStatus.UNAUTHORIZED);
+    GOOGLE_TOKEN_INVALID("Google token is invalid", HttpStatus.UNAUTHORIZED),
+
+    FOLLOW_INVALID("You can't not follow yourself", HttpStatus.CONFLICT),
+
+    RESOURCE_NOT_FOUND("Resource not found ",HttpStatus.NOT_FOUND);
 
 
 

@@ -14,7 +14,6 @@ public class UserMapper {
     public User toUser(UserRequest userRequest, Set<Role> roles) {
         return User.builder()
                 .email(userRequest.email())
-                .fullName(userRequest.fullName())
                 .username(userRequest.username())
                 .roles(roles)
                 .status(UserStatus.ACTIVE)

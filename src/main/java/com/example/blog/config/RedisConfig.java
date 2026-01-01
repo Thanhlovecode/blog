@@ -79,6 +79,7 @@ public class RedisConfig {
         ObjectMapper cacheObjectMapper = createRedisObjectMapper();
 
         GenericJackson2JsonRedisSerializer defaultSerializer = new GenericJackson2JsonRedisSerializer(cacheObjectMapper);
+
         Jackson2JsonRedisSerializer<PageResponse> pageResponseJackson2JsonRedisSerializer =
                 new Jackson2JsonRedisSerializer<>(cacheObjectMapper, PageResponse.class);
         Jackson2JsonRedisSerializer<PostResponseDetail> postResponseDetailJackson2JsonRedisSerializer =

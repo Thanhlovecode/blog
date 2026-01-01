@@ -2,13 +2,19 @@ package com.example.blog.service;
 
 import com.example.blog.dto.response.PageResponse;
 import com.example.blog.dto.response.PostResponse;
+import com.example.blog.dto.response.PostResponseDetail;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PostCacheService {
     PageResponse<Long> getPostIdsPage(int page);
     List<PostResponse> getListPostResponseFromCache(List<Long> postIds);
     void multiSetPostResponses(List<PostResponse> postResponses);
     void multiSetViewCounts(List<PostResponse> postResponses);
-    List<Integer> getListViewCountFromCache(List<Long> postIds);
+    Map<Long,Long> getListViewCountFromCache(List<Long> postIds);
+    void hashMultiSetViewCounts(Map<Long,Long> postIdViewCounts);
+    Long getViewCountRealTime(Long postId);
+    PostResponseDetail getCachedPostContent(String slug);
+
 }

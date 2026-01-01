@@ -1,4 +1,4 @@
 package com.example.blog.event;
 
-public record PostViewEvent(long postId,String clientIp) {
+public record PostViewEvent(long postId,String clientIp,String userAgent) {
 }

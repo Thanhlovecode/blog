@@ -4,16 +4,16 @@ import com.example.blog.service.RedisService;
 import com.example.blog.service.ViewCounterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.example.blog.constants.CacheConstants.BATCH_SIZE;
-import static com.example.blog.constants.CacheConstants.CACHE_POST_VIEW_COUNT;
+import static com.example.blog.utils.RedisKeys.DIRTY_POST_SET_KEY;
+import static com.example.blog.utils.RedisKeys.POST_VIEW_HASH_KEY;
 
 @Slf4j(topic = "VIEW-SCHEDULE")
 @Component
@@ -29,29 +29,21 @@ public class ViewCountBatchSchedule {
     @Scheduled(fixedDelay = 60_000) // 60s
     public void batchUpdateViewCount(){
         log.info("Starting batch update view counts");
-        Set<ZSetOperations.TypedTuple<Object>> entries = redisService.popMinFromSortedSet(COUNTER_KEY, BATCH_SIZE);
 
-        if(entries == null || entries.isEmpty()){
-            log.info("No pending view counts to update");
+        List<Long> dirtyPostIds = redisService.popSetMembers(DIRTY_POST_SET_KEY, BATCH_SIZE);
+
+        if(dirtyPostIds == null || dirtyPostIds.isEmpty()){
+            log.info("No dirty post views to process");
             return;
         }
 
-        Map<String, Integer> keyIncrements = new HashMap<>();
-        Map<Long, Integer> postIncrements = new HashMap<>();
+        Map<Long,Long> currentViews = redisService.getHashMultiGet(POST_VIEW_HASH_KEY, dirtyPostIds);
 
-        for(ZSetOperations.TypedTuple<Object> entry : entries){
-            Long postId = Long.parseLong(entry.getValue().toString());
-            Integer viewIncrement = entry.getScore().intValue();
-            keyIncrements.put(CACHE_POST_VIEW_COUNT + postId, viewIncrement);
-            postIncrements.put(postId, viewIncrement);
+
+        if (!currentViews.isEmpty()) {
+            viewCounterService.updateListPostViewCount(currentViews);
+            log.info("Batch updated view counts for {} posts", currentViews.size());
         }
-
-        // Chỉ batch update trong transaction
-        viewCounterService.updateListPostViewCount(postIncrements);
-
-
-        redisService.multiIncrementKeys(keyIncrements);
-        log.info("=== Batch update finished. Processed {} entries ===", entries.size());
     }
 
 }

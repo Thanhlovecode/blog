@@ -85,7 +85,7 @@ public class CommentServiceImpl implements CommentService {
                 .user(user)
                 .content(commentRequest.content())
                 .parentCommentId(commentRequest.parentCommentId())
-                .displayName(user.getFullName())
+                .displayName(user.getProfile().getFullName())
                 .userAvatar(user.getProfile().getThumbnailUrl())
                 .username(user.getUsername())
                 .build();

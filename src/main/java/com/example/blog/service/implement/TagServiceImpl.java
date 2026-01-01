@@ -12,7 +12,7 @@ import com.example.blog.service.CloudinaryService;
 import com.example.blog.service.TagService;
 import com.example.blog.utils.FileUploadUtils;
 import com.example.blog.utils.PageUtils;
-import com.example.blog.utils.SlugUtil;
+import com.example.blog.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -44,7 +44,7 @@ public class TagServiceImpl implements TagService {
     @CacheEvict(cacheNames = "tags",allEntries = true)
     public void updateTag(String slug,TagUpdateRequest tagUpdateRequest) {
 
-        String newSlug = SlugUtil.toSlug(tagUpdateRequest.name());
+        String newSlug = SlugUtils.toSlug(tagUpdateRequest.name());
 
         if(tagRepository.existsBySlug(newSlug)) {
             throw new AppException(ErrorCode.TAG_ALREADY_EXISTS);
@@ -82,7 +82,7 @@ public class TagServiceImpl implements TagService {
         String thumbnailUrl = cloudinaryService.uploadThumbnail(multipartFile);
         Tag tag = Tag.builder()
                 .name(tagName)
-                .slug(SlugUtil.toSlug(tagName))
+                .slug(SlugUtils.toSlug(tagName))
                 .thumbnailUrl(thumbnailUrl)
                 .build();
 

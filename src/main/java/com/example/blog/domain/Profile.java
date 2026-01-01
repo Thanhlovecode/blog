@@ -21,6 +21,7 @@ public class Profile{
     @Id
     private long id;
 
+    private String fullName;
     private String firstName;
     private String lastName;
 

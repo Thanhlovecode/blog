@@ -23,8 +23,6 @@ public class User extends BaseEntity {
 
     private String googleId;
 
-    @Column(nullable = false)
-    private String fullName;
 
     @Column(nullable = false)
     private String username;
@@ -32,6 +30,11 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserStatus status;
+
+
+    private Integer followerCount;
+
+    private Integer followingCount;
 
 
     @OneToOne(mappedBy = "user", cascade = {CascadeType.MERGE, CascadeType.PERSIST}

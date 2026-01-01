@@ -12,7 +12,7 @@ import com.example.blog.repository.RoleRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.MailService;
 import com.example.blog.service.UserService;
-import com.example.blog.utils.PreFixUtils;
+import com.example.blog.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,13 +60,15 @@ public class UserServiceImpl implements UserService {
     public void createUser(UserRequest request) {
 
         Set<Role> roles = new HashSet<>();
-        roleRepository.findByName(PreFixUtils.ROLE_USER).ifPresent(roles::add);
+        roleRepository.findByName(TokenUtils.ROLE_USER).ifPresent(roles::add);
 
 
         User user = userMapper.toUser(request,roles);
         user.setPassword(passwordEncoder.encode(request.password()));
 
-        Profile profile = Profile.builder().user(user).build();
+        Profile profile = Profile.builder()
+                .fullName(request.fullName())
+                .user(user).build();
         user.setProfile(profile);
 
         userRepository.save(user);

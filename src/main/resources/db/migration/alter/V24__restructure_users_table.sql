@@ -1,0 +1,9 @@
+ALTER TABLE users
+DROP COLUMN full_name;
+
+ALTER TABLE users
+ADD COLUMN follower_count INT NOT NULL DEFAULT 0,
+ADD COLUMN following_count INT NOT NULL DEFAULT 0;
+
+ALTER TABLE profiles
+ADD full_name VARCHAR(100) NOT NULL;

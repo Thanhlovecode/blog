@@ -4,6 +4,7 @@ import com.example.blog.domain.Profile;
 import com.example.blog.dto.request.ContactInfoRequest;
 import com.example.blog.dto.request.PersonalInfoRequest;
 import com.example.blog.dto.response.CloudinaryResponse;
+import com.example.blog.dto.response.FollowResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,5 +25,9 @@ public class ProfileMapper {
         profile.setImageUrl(cloudinaryResponse.imageUrl());
         profile.setImageId(cloudinaryResponse.publicId());
         profile.setThumbnailUrl(cloudinaryResponse.thumbnailUrl());
+    }
+
+    public FollowResponse toFollowResponse(Profile profile) {
+        return new FollowResponse(profile.getFullName(), profile.getThumbnailUrl(), profile.getId());
     }
 }

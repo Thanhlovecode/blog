@@ -5,14 +5,12 @@ import com.example.blog.domain.Role;
 import com.example.blog.domain.User;
 import com.example.blog.enums.TypeToken;
 import com.example.blog.service.TokenService;
-import com.example.blog.utils.PreFixUtils;
+import com.example.blog.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
-import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -44,7 +42,7 @@ public class TokenServiceImpl implements TokenService {
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(user.getUsername())
-                .claim(PreFixUtils.USER_ID,user.getId())
+                .claim(TokenUtils.USER_ID,user.getId())
                 .claim(TYPE_TOKEN,typeToken)
                 .issuedAt(now)
                 .subject(user.getUsername())
