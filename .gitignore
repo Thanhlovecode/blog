@@ -33,3 +33,6 @@ build/
 .vscode/
 
 /src/main/resources/certs/**
+# Environment variables
+.env
+environment/.env

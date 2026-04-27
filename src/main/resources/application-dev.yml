@@ -69,6 +69,7 @@ spring:
     redis:
       host: 127.0.0.1 # Host of the Redis server
       port: 6379 # Port of the Redis server for connection
+      password: ${REDIS_PASSWORD} # Password for authenticating with the Redis server
       lettuce:
         pool: # Connection pool settings
           max-active: 10 # Maximum number of active connections in the pool (uses -1 for no limit)
@@ -76,6 +77,7 @@ spring:
           min-idle: 5 # Minimum number of idle connections in the pool
       #max-wait: -1ms # Maximum wait time to get a connection from the pool (uses -1 for no limit)
       connect-timeout: 30000 # Connection timeout (in milliseconds)
+
 
 
 cloudinary:
