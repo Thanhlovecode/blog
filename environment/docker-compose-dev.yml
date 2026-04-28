@@ -1,22 +1,35 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: always
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   redis:
     image: redis:8.4.0-alpine
     container_name: redis-server
     restart: always
-
-    # Chỉ expose nếu cần access từ host
     ports:
       - "127.0.0.1:6379:6379"
-
-
-
-    # Environment variables
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-thanhdeptrai}
-
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: >
       redis-server 
-      --requirepass ${REDIS_PASSWORD:-thanhdeptrai}
+      --requirepass ${REDIS_PASSWORD}
       --appendonly yes 
       --appendfsync everysec
       --save 900 1
@@ -27,36 +40,15 @@ services:
       --tcp-backlog 511
       --timeout 300
       --tcp-keepalive 60
-
     volumes:
       - redis_data:/data
-      # Optional: custom config file
-      # - ./redis.conf:/usr/local/etc/redis/redis. conf
-
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 640M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-thanhdeptrai}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 40s
 
-    sysctls:
-      - net.core.somaxconn=1024
-
-    logging:
-      driver:  "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
 volumes:
+  mysql_data:
   redis_data:
