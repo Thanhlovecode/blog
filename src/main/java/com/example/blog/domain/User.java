@@ -32,9 +32,13 @@ public class User extends BaseEntity {
     private UserStatus status;
 
 
-    private Integer followerCount;
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer followerCount = 0;
 
-    private Integer followingCount;
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer followingCount = 0;
 
 
     @OneToOne(mappedBy = "user", cascade = {CascadeType.MERGE, CascadeType.PERSIST}

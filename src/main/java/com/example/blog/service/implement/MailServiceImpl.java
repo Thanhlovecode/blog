@@ -7,6 +7,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Backoff;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 @Slf4j(topic = "MAIL-SERVICE")
+@ConditionalOnBean(JavaMailSender.class) // Skip when mail is not configured
 public class MailServiceImpl implements MailService {
 
     private static final int MAX_RETRY_ATTEMPTS = 3;
@@ -33,7 +35,7 @@ public class MailServiceImpl implements MailService {
    private String from;
 
     @Override
-    @Async("taskExecutor")
+    @Async("virtualThreadExecutor")
     @Retryable(
             retryFor = {EmailSendException.class},
             maxAttempts = MAX_RETRY_ATTEMPTS,

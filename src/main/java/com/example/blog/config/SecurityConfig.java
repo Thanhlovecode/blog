@@ -16,32 +16,28 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-
     private final CustomJwtDecoder customJwtDecoder;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**","/api/v1/users/**"};
+    private final String[] PUBLIC_ENDPOINTS = { "/api/v1/auth/**", "/api/v1/users/**", "/error" };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(requestMatcherRegistry ->
-                requestMatcherRegistry.requestMatchers(PUBLIC_ENDPOINTS)
+        httpSecurity.authorizeHttpRequests(
+                requestMatcherRegistry -> requestMatcherRegistry.requestMatchers(PUBLIC_ENDPOINTS)
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET,"/api/v1/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .anyRequest()
                         .authenticated());
-        httpSecurity.oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwtConfigurer -> jwtConfigurer
-                                        .decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(customJwtAuthenticationConverter))
-                                        .authenticationEntryPoint(authenticationEntryPoint))
-                        .sessionManagement(session -> session
-                                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // no save state server
+        httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
+                .decoder(customJwtDecoder)
+                .jwtAuthenticationConverter(customJwtAuthenticationConverter))
+                .authenticationEntryPoint(authenticationEntryPoint))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // no save state server
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();
     }
-
-
 
 }

@@ -8,6 +8,7 @@ import com.example.blog.enums.ErrorCode;
 import com.example.blog.exception.AppException;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.MailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.blog.service.PasswordService;
 import com.example.blog.service.RedisService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,8 @@ public class PasswordServiceImpl implements PasswordService {
     @Value("${key.change-password.expire}")
     private int changePasswordExpire;
 
-    private final MailService mailService;
+    @Autowired(required = false) // TODO: Remove 'required = false' when EMAIL is configured
+    private MailService mailService;
     private final RedisService redisService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -64,7 +66,11 @@ public class PasswordServiceImpl implements PasswordService {
         userRepository.findByEmail(email).ifPresentOrElse(user -> {
             String otp = generateRandomOtp();
             redisService.setString(getPrefixKeyEmail(email), otp, otpExpiration);
-            mailService.sendSimpleMail(email, SUBJECT_RESET_PASSWORD, CONTENT + otp);
+            if (mailService != null) {
+                mailService.sendSimpleMail(email, SUBJECT_RESET_PASSWORD, CONTENT + otp);
+            } else {
+                log.warn("Mail service is disabled. OTP for {}: {}", email, otp);
+            }
             log.info("OTP sent successfully with email: {}", email);
         },()->log.info("OTP request ignored for non-existing email: {}", email));
 

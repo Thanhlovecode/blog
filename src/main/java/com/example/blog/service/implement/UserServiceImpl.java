@@ -11,6 +11,7 @@ import com.example.blog.mapper.UserMapper;
 import com.example.blog.repository.RoleRepository;
 import com.example.blog.repository.UserRepository;
 import com.example.blog.service.MailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.blog.service.UserService;
 import com.example.blog.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final MailService mailService;
+    @Autowired(required = false) // TODO: Remove 'required = false' when EMAIL is configured
+    private MailService mailService;
 
 
     @Override
