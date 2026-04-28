@@ -7,12 +7,12 @@ import com.example.blog.domain.Tag;
 import com.example.blog.dto.request.PostRequest;
 import com.example.blog.dto.request.PostStatusUpdateRequest;
 import com.example.blog.dto.request.PostUpdateRequest;
-import com.example.blog.dto.response.CommentResponse;
 import com.example.blog.dto.response.PageResponse;
 import com.example.blog.dto.response.PostResponse;
 import com.example.blog.dto.response.PostResponseDetail;
 import com.example.blog.enums.ErrorCode;
 import com.example.blog.enums.PostStatus;
+import com.example.blog.event.PostPublishedEvent;
 import com.example.blog.event.PostUpdateEvent;
 import com.example.blog.event.WarmUpViewCountsEvent;
 import com.example.blog.exception.AppException;
@@ -56,7 +56,6 @@ public class PostServiceImpl implements PostService {
     private static final int SLUG_RANDOM_LENGTH = 8;
     private static final int EXCERPT_MAX_LENGTH = 150;
 
-
     private final ProfileRepository profileRepository;
     private final TagRepository tagRepository;
     private final PostRepository postRepository;
@@ -65,25 +64,23 @@ public class PostServiceImpl implements PostService {
     private final CommentService commentService;
     private final PostMapper postMapper;
 
-
     @Override
     public PageResponse<PostResponse> getNewestPublishedPost(int page) {
         log.info("Request to get newest published posts, page: {}", page);
         PageResponse<Long> pageListPostId = postCacheService.getPostIdsPage(page);
 
         List<Long> postIds = pageListPostId.getContent();
-        if(postIds.isEmpty()) {
+        if (postIds.isEmpty()) {
             return PageResponse.empty();
         }
 
         List<PostResponse> cachePostResponse = getPostResponses(postIds, page);
 
-        updateRealTimeViewCounts(cachePostResponse,postIds);
+        updateRealTimeViewCounts(cachePostResponse, postIds);
 
         return pageListPostId.map(cachePostResponse);
 
     }
-
 
     private List<PostResponse> getPostResponses(List<Long> postIds, int page) {
         List<PostResponse> cached = postCacheService.getListPostResponseFromCache(postIds);
@@ -102,34 +99,31 @@ public class PostServiceImpl implements PostService {
         return postResponses;
     }
 
-    private void updateRealTimeViewCounts(List<PostResponse> cachePostResponse,List<Long> postIds) {
+    private void updateRealTimeViewCounts(List<PostResponse> cachePostResponse, List<Long> postIds) {
 
-        Map<Long,Long> warmUpViewCounts = new HashMap<>();
-        Map<Long,Long> realTimeViewCounts = postCacheService.getListViewCountFromCache(postIds);
+        Map<Long, Long> warmUpViewCounts = new HashMap<>();
+        Map<Long, Long> realTimeViewCounts = postCacheService.getListViewCountFromCache(postIds);
 
-        for(PostResponse postResponse : cachePostResponse) {
+        for (PostResponse postResponse : cachePostResponse) {
             Long realTimeViewCount = realTimeViewCounts.get(postResponse.getId());
-            if(realTimeViewCount != null) {
+            if (realTimeViewCount != null) {
                 postResponse.setTotalViews(realTimeViewCount);
-            }
-            else {
+            } else {
                 warmUpViewCounts.put(postResponse.getId(), postResponse.getTotalViews());
             }
         }
-        if(!warmUpViewCounts.isEmpty()) {
+        if (!warmUpViewCounts.isEmpty()) {
             publisher.publishEvent(new WarmUpViewCountsEvent(warmUpViewCounts));
         }
 
     }
-
 
     @Override
     public PageResponse<PostResponse> getPublishedPostsByUsername(String username, int page) {
         log.info("Request to get published posts for username: {}", username);
         Pageable pageable = PageUtils.defaultSortPageable(page);
         return getPostsPageResponse(
-                () -> postRepository.findPostIdsByUsernameAndStatus(username, PostStatus.PUBLISHED, pageable)
-        );
+                () -> postRepository.findPostIdsByUsernameAndStatus(username, PostStatus.PUBLISHED, pageable));
 
     }
 
@@ -140,24 +134,20 @@ public class PostServiceImpl implements PostService {
         Pageable pageable = PageUtils.sortByFieldPageable(page, sortBy);
 
         return getPostsPageResponse(
-                ()-> postRepository.findPostIdsByTagSlug(slug,PostStatus.PUBLISHED, pageable)
-        );
+                () -> postRepository.findPostIdsByTagSlug(slug, PostStatus.PUBLISHED, pageable));
     }
-
 
     private PageResponse<PostResponse> getPostsPageResponse(Supplier<Page<Long>> supplier) {
         Page<Long> pageListPostId = supplier.get();
 
-        if(pageListPostId.getContent().isEmpty()) {
+        if (pageListPostId.getContent().isEmpty()) {
             return null;
         }
 
-        List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent()
-                , pageListPostId.getSort());
+        List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent(), pageListPostId.getSort());
 
         return PageResponse.fromPage(pageListPostId, convertToListPostResponse(posts));
     }
-
 
     @Override
     public PageResponse<PostResponse> getPublishedPostsByKeySearch(String keyword, int page, String sortBy) {
@@ -165,12 +155,12 @@ public class PostServiceImpl implements PostService {
 
         Pageable pageable = PageUtils.defaultNoSortPageable(page);
 
-        Page<Long> pageListPostId = postRepository.findPostIdsByKeyword(keyword,PostStatus.PUBLISHED.name(), pageable);
+        Page<Long> pageListPostId = postRepository.findPostIdsByKeyword(keyword, PostStatus.PUBLISHED.name(), pageable);
 
         List<Post> posts = postRepository.findPostWithTagsByIds(pageListPostId.getContent(),
-                                                                PageUtils.sortByField(sortBy));
+                PageUtils.sortByField(sortBy));
 
-        return PageResponse.fromPage(pageListPostId,convertToListPostResponse(posts));
+        return PageResponse.fromPage(pageListPostId, convertToListPostResponse(posts));
 
     }
 
@@ -180,21 +170,20 @@ public class PostServiceImpl implements PostService {
                 .toList();
     }
 
-
     @Override
     public PostResponseDetail getPostDetailBySlug(String slug, String clientIp) {
-      PostResponseDetail postResponseDetail = postCacheService.getCachedPostContent(slug);
-      Long viewCountForPost = postCacheService.getViewCountRealTime(postResponseDetail.getId());
+        PostResponseDetail postResponseDetail = postCacheService.getCachedPostContent(slug);
+        Long viewCountForPost = postCacheService.getViewCountRealTime(postResponseDetail.getId());
 
-      if(viewCountForPost != 0){
-            postResponseDetail.setTotalViews(viewCountForPost);
-      }
-      return postResponseDetail;
+        if (viewCountForPost == 0) {
+            postCacheService.warmUpSingleViewCount(
+                    postResponseDetail.getId(), postResponseDetail.getTotalViews());
+            viewCountForPost = postResponseDetail.getTotalViews();
+        }
+        postResponseDetail.setTotalViews(viewCountForPost);
+        return postResponseDetail;
 
     }
-
-
-
 
     @Override
     @Transactional
@@ -208,11 +197,10 @@ public class PostServiceImpl implements PostService {
         log.info("Update post with slug {}", post.getSlug());
     }
 
-
     @Override
     @Transactional
     @PreAuthorize("@postSecurity.isPostOwner(#slug)")
-    @CacheEvict(cacheNames = {POST_IDS_PAGE_CACHE,CACHE_POST_DETAIL}, allEntries = true)
+    @CacheEvict(cacheNames = { POST_IDS_PAGE_CACHE, CACHE_POST_DETAIL }, allEntries = true)
     public void updateStatusPost(String slug, PostStatusUpdateRequest statusUpdateRequest) {
         Post post = postRepository.findPostWithoutContentBySlug(slug)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
@@ -228,10 +216,14 @@ public class PostServiceImpl implements PostService {
         post.setStatus(newStatus);
         postRepository.save(post);
 
+        // Giai đoạn 1: Publish & Warm-up — fire event AFTER_COMMIT
+        if (newStatus == PostStatus.PUBLISHED) {
+            publisher.publishEvent(new PostPublishedEvent(post.getId(), postMapper.toPostResponse(post)));
+        }
+
         log.info("Post status updated: slug='{}', from='{}' to='{}'",
                 slug, currentStatus, newStatus);
     }
-
 
     @Override
     @Transactional
@@ -239,8 +231,8 @@ public class PostServiceImpl implements PostService {
     @CacheEvict(cacheNames = POST_IDS_PAGE_CACHE, allEntries = true)
     public void createPost(PostRequest postRequest) {
         long userId = SecurityUtils.getCurrentUserId();
-        Profile profile = profileRepository.findByUserId(userId).
-                orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Post post = buildPost(postRequest, profile);
 
@@ -257,7 +249,6 @@ public class PostServiceImpl implements PostService {
         double minutes = (double) estimatedWords / WORDS_PER_MINUTE;
         return Math.max(1, (int) Math.ceil(minutes));
     }
-
 
     private PostContent buildPostContent(String content) {
         return PostContent.builder()
@@ -312,8 +303,5 @@ public class PostServiceImpl implements PostService {
         post.setExcerpt(updateRequest.content().substring(0, EXCERPT_MAX_LENGTH));
         post.setTags(findAllTagsById(updateRequest.idTags()));
     }
-
-
-
 
 }
